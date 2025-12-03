@@ -151,7 +151,15 @@ const App = () => {
       
       {/* Scrollable Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar w-full pb-40">
-        <div className="max-w-md mx-auto p-4 pt-safe-top min-h-full">
+        {/* 
+            Use inline styles for padding-top to handle safe area correctly.
+            max(20px, env(safe-area-inset-top)) ensures we don't hit the notch,
+            but also keep 20px padding on non-notch devices.
+        */}
+        <div 
+            className="max-w-md mx-auto p-4 min-h-full"
+            style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+        >
            {renderContent()}
         </div>
       </main>
@@ -160,7 +168,10 @@ const App = () => {
       <IOSInstallPrompt avatar={data.profile.avatar} />
 
       {/* Fixed Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50 pb-safe-bottom">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
         <div className="max-w-md mx-auto h-[60px] grid grid-cols-4 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />

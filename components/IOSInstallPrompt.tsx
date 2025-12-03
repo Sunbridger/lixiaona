@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Share, PlusSquare, X } from 'lucide-react';
+import { Share, X } from 'lucide-react';
 
 export const IOSInstallPrompt: React.FC<{ avatar?: string }> = ({ avatar }) => {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -22,7 +22,10 @@ export const IOSInstallPrompt: React.FC<{ avatar?: string }> = ({ avatar }) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col justify-end">
-      <div className="bg-white rounded-t-3xl p-6 shadow-float animate-slide-up pb-safe-bottom">
+      <div 
+        className="bg-white rounded-t-3xl p-6 shadow-float animate-slide-up"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+      >
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-4 items-center">
             <div className="w-14 h-14 rounded-xl bg-primary/10 overflow-hidden shadow-inner border border-primary/20 shrink-0">
