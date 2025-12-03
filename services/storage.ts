@@ -1,52 +1,70 @@
 import { AppData, DailyLog, UserProfile } from '../types';
 
-const STORAGE_KEY = 'momo_fit_data_v1';
+const STORAGE_KEY = 'momo_fit_data_v2'; // Bumped version to force refresh default data
 
-// Pre-fill with data from "Li Xiaona's Plan" image for demo purposes
+const getRelativeDate = (daysOffset: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.toISOString().split('T')[0];
+};
+
+const getRelativeTimestamp = (daysOffset: number): number => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  return date.getTime();
+};
+
+// Generate data dynamically so it looks active "Today"
+const dateMinus4 = getRelativeDate(-4);
+const dateMinus3 = getRelativeDate(-3);
+const dateMinus2 = getRelativeDate(-2);
+const dateMinus1 = getRelativeDate(-1);
+const dateToday = getRelativeDate(0);
+
 const DEFAULT_DATA: AppData = {
   profile: {
     name: '李小娜',
     startWeight: 50.8,
     targetWeight: 46.8, // 8 catties = 4kg loss
-    startDate: new Date('2023-11-29').getTime(),
+    startDate: getRelativeTimestamp(-4),
     height: 165,
   },
   logs: {
-    '2023-11-29': {
-      id: '2023-11-29',
-      date: new Date('2023-11-29').getTime(),
+    [dateMinus4]: {
+      id: dateMinus4,
+      date: getRelativeTimestamp(-4),
       weight: 50.8,
       breakfast: '',
       lunch: '',
       dinner: '减脂计划开始！甩掉脂肪肝'
     },
-    '2023-11-30': {
-      id: '2023-11-30',
-      date: new Date('2023-11-30').getTime(),
+    [dateMinus3]: {
+      id: dateMinus3,
+      date: getRelativeTimestamp(-3),
       weight: 50.6,
       breakfast: '两个鸡蛋 半根玉米 一袋无糖酸奶',
       lunch: '少量白米饭 清炒西葫芦',
       dinner: '水煮虾 凉拌黄瓜 少量糙米'
     },
-    '2023-12-01': {
-      id: '2023-12-01',
-      date: new Date('2023-12-01').getTime(),
+    [dateMinus2]: {
+      id: dateMinus2,
+      date: getRelativeTimestamp(-2),
       weight: 50.4,
       breakfast: '一根水果黄瓜 一袋无糖酸奶',
       lunch: '少量糙米 水煮虾 清炒青菜',
       dinner: '少量米饭 青菜'
     },
-    '2023-12-02': {
-      id: '2023-12-02',
-      date: new Date('2023-12-02').getTime(),
+    [dateMinus1]: {
+      id: dateMinus1,
+      date: getRelativeTimestamp(-1),
       weight: 50.0,
       breakfast: '无',
       lunch: '糙米 花菜 西红柿炒蛋',
       dinner: '豆芽 红萝卜炒墨鱼'
     },
-    '2023-12-03': {
-      id: '2023-12-03',
-      date: new Date('2023-12-03').getTime(),
+    [dateToday]: {
+      id: dateToday,
+      date: getRelativeTimestamp(0),
       weight: 49.9,
       breakfast: '无',
       lunch: '2个红烧鸡翅 糙米 豌豆',

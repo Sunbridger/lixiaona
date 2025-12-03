@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>MomoFit - 李小娜的减脂计划</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -19,7 +22,7 @@
               muted: '#9CA3AF'
             },
             fontFamily: {
-              sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+              sans: ['"M PLUS Rounded 1c"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
             },
             boxShadow: {
               'soft': '0 8px 30px -4px rgba(255, 158, 170, 0.15)',
@@ -34,6 +37,15 @@
       }
     </script>
     <style>
+      html, body, #root {
+        height: 100%;
+        height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent body scroll, handle scroll in App container */
+        overscroll-behavior: none; /* Prevent pull-to-refresh/rubber banding */
+      }
+      
       body {
         -webkit-tap-highlight-color: transparent;
         background-color: #FFF9F9;
@@ -41,7 +53,9 @@
         background-image: radial-gradient(#FFD0D0 1.5px, transparent 1.5px);
         background-size: 24px 24px;
         color: #4A403A;
+        font-family: "M PLUS Rounded 1c", sans-serif;
       }
+
       /* Hide scrollbar for clean UI */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
@@ -50,6 +64,7 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      
       /* Smooth transitions */
       .page-transition {
         animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -66,13 +81,12 @@
   <script type="importmap">
 {
   "imports": {
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.0"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
   }
 }
 </script>

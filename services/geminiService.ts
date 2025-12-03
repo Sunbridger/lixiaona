@@ -14,7 +14,10 @@ export const generateDietAdvice = async (data: AppData, query: string): Promise<
     .sort((a, b) => b.date - a.date)
     .slice(0, 5); // Last 5 days
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const contextStr = JSON.stringify({
+    currentDate: todayStr,
     profile: data.profile,
     recentHistory: recentLogs
   });
@@ -22,6 +25,7 @@ export const generateDietAdvice = async (data: AppData, query: string): Promise<
   const systemInstruction = `
     你叫 Momo (莫莫)，是一个超级可爱、贴心、元气满满的私人减肥教练姐姐。
     你的用户是一个想要健康瘦身的年轻女生。
+    今天是: ${todayStr}
     
     风格指南：
     - 请全程使用中文回答。
