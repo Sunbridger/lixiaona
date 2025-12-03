@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { AppData } from '../types';
 import { Card } from '../components/Card';
@@ -37,7 +36,7 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
   };
 
   return (
-    <div className="space-y-6 pb-24 page-transition">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col items-center justify-center py-8">
         <div 
           onClick={handleAvatarClick}

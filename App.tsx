@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppData, TabView } from './types';
 import { getAppData, STORAGE_KEY } from './services/storage';
@@ -147,34 +146,29 @@ const App = () => {
   };
 
   return (
-    // Main container
-    <div className="relative w-full h-full max-w-md mx-auto bg-transparent flex flex-col shadow-2xl overflow-hidden">
+    // Main container - Fixed to viewport height
+    <div className="h-full w-full bg-[#FFF9F9] flex flex-col overflow-hidden relative">
       
-      {/* IOS Install Prompt Overlay */}
-      <IOSInstallPrompt avatar={data.profile.avatar} />
-
-      {/* Top Safe Area Spacer (Dynamic Island/Notch) */}
-      <div className="w-full shrink-0" style={{ height: 'max(env(safe-area-inset-top), 20px)' }} />
-
-      {/* Main Content Scrollable Area */}
-      {/* Increase bottom padding (pb-28) to ensure content isn't hidden behind the fixed footer */}
-      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 pt-4">
-        {renderContent()}
+      {/* Scrollable Content Area */}
+      <main className="flex-1 overflow-y-auto no-scrollbar w-full pb-40">
+        <div className="max-w-md mx-auto p-4 pt-safe-top min-h-full">
+           {renderContent()}
+        </div>
       </main>
 
-      {/* Bottom Navigation */}
-      {/* Fixed positioning ensures it sticks to the bottom of the viewport (screen), handling PWA quirks better than absolute */}
-      <nav 
-        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-rose-50 z-50 rounded-t-2xl shadow-[0_-4px_20px_-5px_rgba(255,158,170,0.1)]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="grid grid-cols-4 h-[60px] items-center px-2">
+      {/* iOS Install Prompt Overlay */}
+      <IOSInstallPrompt avatar={data.profile.avatar} />
+
+      {/* Fixed Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50 pb-safe-bottom">
+        <div className="max-w-md mx-auto h-[60px] grid grid-cols-4 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
-          <NavButton tab={TabView.LOG} icon={PenTool} label="记录" />
+          <NavButton tab={TabView.LOG} icon={PenTool} label="记一笔" />
           <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
         </div>
       </nav>
+      
     </div>
   );
 };

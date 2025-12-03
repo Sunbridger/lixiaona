@@ -60,7 +60,7 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
   ];
 
   return (
-    <div className="space-y-6 pb-24 page-transition">
+    <div className="space-y-6 page-transition">
       <div className="flex items-center gap-4 mb-6">
         <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm text-gray-500">
           <ChevronLeft size={20} />

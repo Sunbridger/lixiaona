@@ -6,7 +6,7 @@ export const History: React.FC<{ data: AppData }> = ({ data }) => {
   const sortedDates = Object.keys(data.logs).sort((a, b) => b.localeCompare(a));
 
   return (
-    <div className="space-y-4 pb-24 page-transition">
+    <div className="space-y-4 page-transition">
       <h1 className="text-2xl font-bold text-gray-800 px-2">历史记录 📅</h1>
       
       {sortedDates.length === 0 ? (

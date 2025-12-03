@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { AppData } from '../types';
 import { Card } from '../components/Card';
@@ -47,7 +46,7 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
   const daysOnPlan = Math.max(1, Math.floor((Date.now() - profile.startDate) / (1000 * 60 * 60 * 24)) + 1);
 
   return (
-    <div className="space-y-6 pb-24 page-transition">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <header className="flex justify-between items-start px-2">
         <div>
