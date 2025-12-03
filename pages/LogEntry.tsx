@@ -4,7 +4,8 @@ import { AppData, DailyLog } from '../types';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { saveDailyLog } from '../services/storage';
-import { ChevronLeft, Save, Flame, Apple } from 'lucide-react';
+import { analyzeFoodCalories } from '../services/geminiService';
+import { ChevronLeft, Save, Flame, Apple, Sparkles, Loader2 } from 'lucide-react';
 
 interface LogEntryProps {
   data: AppData;
@@ -14,6 +15,7 @@ interface LogEntryProps {
 export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Initialize state with existing log or empty
   const [entry, setEntry] = useState<DailyLog>(() => {
@@ -57,6 +59,27 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
     onBack();
   };
 
+  const handleAICalculate = async () => {
+    if (!entry.breakfast && !entry.lunch && !entry.dinner) {
+      alert("请先填写今天的饮食内容哦~ 🍱");
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    const calories = await analyzeFoodCalories(
+      entry.breakfast || '', 
+      entry.lunch || '', 
+      entry.dinner || ''
+    );
+    
+    if (calories) {
+      setEntry(prev => ({ ...prev, caloriesIn: calories }));
+    } else {
+      alert("AI 暂时无法估算，请稍后再试或手动输入 >_<");
+    }
+    setIsAnalyzing(false);
+  };
+
   const mealConfig = [
     { label: '早餐', key: 'breakfast', icon: '🍳', placeholder: '早餐吃了什么美味呀？' },
     { label: '午餐', key: 'lunch', icon: '🍱', placeholder: '午餐吃了多少呢？' },
@@ -83,52 +106,7 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
         />
       </Card>
 
-      {/* Weight Input */}
-      <Card title="体重 (kg)">
-        <div className="flex items-end gap-2">
-           <input 
-             type="number" 
-             step="0.1"
-             placeholder="0.0"
-             value={entry.weight || ''}
-             onChange={(e) => setEntry({...entry, weight: parseFloat(e.target.value)})}
-             className="text-4xl font-bold text-primary w-full outline-none placeholder:text-gray-200"
-           />
-           <span className="mb-2 text-gray-400 font-medium">kg</span>
-        </div>
-      </Card>
-
-      {/* Calorie Tracking */}
-      <Card title="热量档案 (kcal) 🔥">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-rose-50 rounded-2xl p-3">
-             <div className="flex items-center gap-1 text-xs text-rose-500 font-bold mb-1">
-               <Apple size={14} /> 摄入
-             </div>
-             <input 
-               type="number" 
-               placeholder="0"
-               value={entry.caloriesIn || ''}
-               onChange={(e) => setEntry({...entry, caloriesIn: parseInt(e.target.value) || undefined})}
-               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300"
-             />
-          </div>
-          <div className="bg-orange-50 rounded-2xl p-3">
-             <div className="flex items-center gap-1 text-xs text-orange-500 font-bold mb-1">
-               <Flame size={14} /> 运动/消耗
-             </div>
-             <input 
-               type="number" 
-               placeholder="0"
-               value={entry.caloriesOut || ''}
-               onChange={(e) => setEntry({...entry, caloriesOut: parseInt(e.target.value) || undefined})}
-               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300"
-             />
-          </div>
-        </div>
-      </Card>
-
-      {/* Meals */}
+      {/* Meals Input - Moved up for better flow with AI Calc */}
       <Card title="饮食打卡 🥗">
         <div className="space-y-4">
           {mealConfig.map((meal) => (
@@ -145,6 +123,67 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
               />
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Calorie Tracking */}
+      <Card title="热量档案 (kcal) 🔥">
+        <div className="mb-4 flex justify-between items-center bg-rose-50/50 p-2 rounded-xl">
+           <span className="text-xs text-rose-400 font-bold px-2">没概念？让 AI 帮你算算 👇</span>
+           <button 
+             onClick={handleAICalculate}
+             disabled={isAnalyzing}
+             className="bg-white text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-rose-100 flex items-center gap-1 active:scale-95 transition-transform"
+           >
+             {isAnalyzing ? <Loader2 size={12} className="animate-spin"/> : <Sparkles size={12} />}
+             {isAnalyzing ? "估算中..." : "AI 估算摄入"}
+           </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-rose-50 rounded-2xl p-3 relative overflow-hidden">
+             <div className="flex items-center gap-1 text-xs text-rose-500 font-bold mb-1">
+               <Apple size={14} /> 摄入
+             </div>
+             <input 
+               type="number" 
+               placeholder="0"
+               value={entry.caloriesIn || ''}
+               onChange={(e) => setEntry({...entry, caloriesIn: parseInt(e.target.value) || undefined})}
+               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300 relative z-10"
+             />
+             {/* Visual decoration */}
+             <div className="absolute -bottom-2 -right-2 text-rose-100 transform rotate-12 pointer-events-none">
+                <Sparkles size={40} />
+             </div>
+          </div>
+          <div className="bg-orange-50 rounded-2xl p-3">
+             <div className="flex items-center gap-1 text-xs text-orange-500 font-bold mb-1">
+               <Flame size={14} /> 运动/消耗
+             </div>
+             <input 
+               type="number" 
+               placeholder="0"
+               value={entry.caloriesOut || ''}
+               onChange={(e) => setEntry({...entry, caloriesOut: parseInt(e.target.value) || undefined})}
+               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300"
+             />
+          </div>
+        </div>
+      </Card>
+
+      {/* Weight Input */}
+      <Card title="体重 (kg)">
+        <div className="flex items-end gap-2">
+           <input 
+             type="number" 
+             step="0.1"
+             placeholder="0.0"
+             value={entry.weight || ''}
+             onChange={(e) => setEntry({...entry, weight: parseFloat(e.target.value)})}
+             className="text-4xl font-bold text-primary w-full outline-none placeholder:text-gray-200"
+           />
+           <span className="mb-2 text-gray-400 font-medium">kg</span>
         </div>
       </Card>
 

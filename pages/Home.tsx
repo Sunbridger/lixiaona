@@ -1,59 +1,65 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { AppData } from '../types';
+import { AppData, DietRecommendation } from '../types';
 import { Card } from '../components/Card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
-import { Scale, TrendingDown, Clock, Flame, Apple, Sparkles } from 'lucide-react';
+import { Scale, TrendingDown, Clock, Flame, Apple, Sparkles, RefreshCw } from 'lucide-react';
+import { getDietRecommendation } from '../services/geminiService';
+import { saveDailyTip } from '../services/storage';
 
 interface HomeProps {
   data: AppData;
   onNavigateLog: () => void;
 }
 
-// Simple Logic for Diet Recommendations based on time of day
-const getRecommendation = () => {
+// Fallback Static Logic
+const getStaticRecommendation = (): DietRecommendation => {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 10) {
-    return {
-      icon: "🍳",
-      title: "早餐吃得像女王",
-      text: "早餐是启动代谢的关键！推荐：全麦面包 + 鸡蛋 + 无糖豆浆/牛奶。优质蛋白能让你一上午不饿哦~"
-    };
-  } else if (hour >= 10 && hour < 14) {
-    return {
-      icon: "🥗",
-      title: "午餐营养要均衡",
-      text: "午餐法则：1拳主食(糙米/薯类) + 1掌心肉类(鸡胸/鱼虾) + 2拳蔬菜。细嚼慢咽更容易瘦！"
-    };
-  } else if (hour >= 14 && hour < 17) {
-    return {
-      icon: "🍵",
-      title: "下午茶小贴士",
-      text: "嘴馋了吗？试试吃个苹果、一小把坚果(10g)或者喝杯黑咖啡。拒绝奶茶诱惑！"
-    };
-  } else if (hour >= 17 && hour < 20) {
-    return {
-      icon: "🥣",
-      title: "晚餐清淡无负担",
-      text: "晚餐尽量在7点前吃完。推荐：凉拌黄瓜 + 水煮虾。少吃碳水，让身体在睡眠中持续燃脂。"
-    };
-  } else {
-    return {
-      icon: "🌙",
-      title: "深夜勿食",
-      text: "太晚吃东西会加重肠胃负担哦。如果实在饿得睡不着，喝一小杯温牛奶吧。早点休息，熬夜也会变胖！"
-    };
-  }
+  let tip = { icon: "🌙", title: "早点休息", text: "早睡也是减肥的一部分哦！" };
+  
+  if (hour >= 5 && hour < 10) tip = { icon: "🍳", title: "早餐女王", text: "早餐是启动代谢的关键！推荐：全麦面包 + 鸡蛋 + 无糖豆浆。" };
+  else if (hour >= 10 && hour < 14) tip = { icon: "🥗", title: "午餐均衡", text: "1拳主食+1掌心肉类+2拳蔬菜。细嚼慢咽更容易瘦！" };
+  else if (hour >= 14 && hour < 17) tip = { icon: "🍵", title: "下午茶", text: "嘴馋了吗？吃个苹果或一把坚果吧，拒绝奶茶诱惑！" };
+  else if (hour >= 17 && hour < 20) tip = { icon: "🥣", title: "晚餐清淡", text: "晚餐尽量在7点前吃完。少吃碳水，持续燃脂。" };
+  
+  return { ...tip, date: new Date().toISOString().split('T')[0] };
 };
 
 export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
-  const { profile, logs } = data;
-  const [tip, setTip] = useState(getRecommendation());
+  const { profile, logs, dailyTip } = data;
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  // Use cached tip if available and from today, otherwise fallback or load new
+  const [tip, setTip] = useState<DietRecommendation>(() => {
+    if (dailyTip && dailyTip.date === todayStr) {
+      return dailyTip;
+    }
+    return getStaticRecommendation();
+  });
+  
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // Fetch AI Recommendation if cache is missing or stale
   useEffect(() => {
-    // Refresh tip logic occasionally
-    setTip(getRecommendation());
-  }, []);
+    const shouldFetch = !dailyTip || dailyTip.date !== todayStr;
+    
+    if (shouldFetch) {
+      let isMounted = true;
+      const fetchAiTip = async () => {
+        setIsAiLoading(true);
+        const aiTip = await getDietRecommendation(profile, logs);
+        if (isMounted && aiTip) {
+          setTip(aiTip);
+          saveDailyTip(aiTip); // Save to cache
+        }
+        if (isMounted) setIsAiLoading(false);
+      };
+
+      // Small delay to ensure UI renders first
+      const timer = setTimeout(fetchAiTip, 1000);
+      return () => { isMounted = false; clearTimeout(timer); };
+    }
+  }, [dailyTip, todayStr, profile, logs]);
 
   const chartData = useMemo(() => {
     const sortedLogKeys = Object.keys(logs).sort();
@@ -79,8 +85,7 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
   }, [logs, profile]);
 
   // Today's stats
-  const todayKey = new Date().toISOString().split('T')[0];
-  const todayLog = logs[todayKey];
+  const todayLog = logs[todayStr];
   const calIn = todayLog?.caloriesIn || 0;
   const calOut = todayLog?.caloriesOut || 0;
 
@@ -96,7 +101,7 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             你好, {profile.name} <span className="text-xl">✨</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1">让我们一起努力达到 {profile.targetWeight}kg 吧！</p>
+          <p className="text-gray-500 text-sm mt-1">目标: {profile.targetWeight}kg</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-xl shadow-sm overflow-hidden border border-white">
@@ -157,18 +162,27 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
           </div>
       </div>
 
-      {/* Diet Recommendation (Momo's Tip) */}
-      <div className="bg-gradient-to-r from-rose-50 to-white border border-rose-100 rounded-3xl p-4 shadow-sm relative overflow-hidden">
+      {/* Diet Recommendation (Momo's Tip) - AI Powered with Cache */}
+      <div className="bg-gradient-to-r from-rose-50 to-white border border-rose-100 rounded-3xl p-4 shadow-sm relative overflow-hidden group">
          <div className="flex items-start gap-3 relative z-10">
-            <div className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm shrink-0">
+            <div className={`text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm shrink-0 transition-transform ${isAiLoading ? 'animate-pulse' : ''}`}>
                {tip.icon}
             </div>
-            <div>
-               <h3 className="font-bold text-primary text-sm flex items-center gap-1 mb-1">
-                  <Sparkles size={14}/> Momo 的饮食建议
-               </h3>
-               <h4 className="font-bold text-gray-800 text-sm mb-1">{tip.title}</h4>
-               <p className="text-xs text-gray-500 leading-relaxed">{tip.text}</p>
+            <div className="flex-1">
+               <div className="flex justify-between items-center mb-1">
+                 <h3 className="font-bold text-primary text-sm flex items-center gap-1">
+                    <Sparkles size={14} className={isAiLoading ? "animate-spin" : ""}/> 
+                    Momo 的建议
+                 </h3>
+                 {isAiLoading && <span className="text-[10px] text-gray-400">更新中...</span>}
+               </div>
+               
+               <h4 className={`font-bold text-gray-800 text-sm mb-1 transition-opacity duration-300 ${isAiLoading ? 'opacity-60' : 'opacity-100'}`}>
+                 {tip.title}
+               </h4>
+               <p className={`text-xs text-gray-500 leading-relaxed transition-opacity duration-300 ${isAiLoading ? 'opacity-60' : 'opacity-100'}`}>
+                 {tip.text}
+               </p>
             </div>
          </div>
       </div>

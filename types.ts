@@ -20,9 +20,17 @@ export interface UserProfile {
   avatar?: string; // Base64 string of the image
 }
 
+export interface DietRecommendation {
+  icon: string;
+  title: string;
+  text: string;
+  date?: string; // Cache key: YYYY-MM-DD
+}
+
 export interface AppData {
   profile: UserProfile;
   logs: Record<string, DailyLog>; // Keyed by YYYY-MM-DD
+  dailyTip?: DietRecommendation; // Cached tip for the day
 }
 
 export enum TabView {

@@ -1,7 +1,7 @@
 
-import { AppData, DailyLog, UserProfile } from '../types';
+import { AppData, DailyLog, UserProfile, DietRecommendation } from '../types';
 
-export const STORAGE_KEY = 'momo_fit_data_v5'; // Bump version to force update
+export const STORAGE_KEY = 'momo_fit_data_v6'; // Bump version for schema change
 
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
@@ -16,7 +16,6 @@ const getRelativeTimestamp = (daysOffset: number): number => {
 };
 
 // Default data populated with "Li Xiaona's Plan" (李小娜的计划)
-// Dates are dynamic relative to "today" so the demo always looks fresh.
 const DEFAULT_DATA: AppData = {
   profile: {
     name: '李小娜',
@@ -77,7 +76,8 @@ const DEFAULT_DATA: AppData = {
       caloriesIn: 650, // Partial day
       caloriesOut: 100
     }
-  }
+  },
+  dailyTip: undefined
 };
 
 export const getAppData = (): AppData => {
@@ -113,6 +113,12 @@ export const saveDailyLog = (log: DailyLog) => {
 export const saveProfile = (profile: UserProfile) => {
   const data = getAppData();
   data.profile = profile;
+  saveAppData(data);
+};
+
+export const saveDailyTip = (tip: DietRecommendation) => {
+  const data = getAppData();
+  data.dailyTip = tip;
   saveAppData(data);
 };
 
