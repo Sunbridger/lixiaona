@@ -1,23 +1,37 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppData, DailyLog } from '../types';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { saveDailyLog } from '../services/storage';
 import { analyzeFoodCalories } from '../services/geminiService';
-import { ChevronLeft, Save, Flame, Apple, Sparkles, Loader2, Calculator } from 'lucide-react';
+import { ChevronLeft, Save, Flame, Apple, Sparkles, Loader2 } from 'lucide-react';
 
 interface LogEntryProps {
   data: AppData;
   onBack: () => void;
 }
 
+type MealType = 'breakfast' | 'lunch' | 'dinner';
+
 export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(today);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
-  // Initialize state with existing log or empty
+  // Track individual meal calories for display
+  const [mealCals, setMealCals] = useState<{ [key in MealType]: number | null }>({
+    breakfast: null,
+    lunch: null,
+    dinner: null
+  });
+
+  const [analyzingStates, setAnalyzingStates] = useState<{ [key in MealType]: boolean }>({
+    breakfast: false,
+    lunch: false,
+    dinner: false
+  });
+  
+  // Initialize state
   const [entry, setEntry] = useState<DailyLog>(() => {
      return data.logs[today] || {
        id: today,
@@ -36,6 +50,8 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
     const existing = data.logs[date];
     if (existing) {
       setEntry(existing);
+      // Reset local cal states on date change (or could try to infer if needed, but safe to reset)
+      setMealCals({ breakfast: null, lunch: null, dinner: null });
     } else {
       setEntry({
         id: date,
@@ -47,6 +63,7 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
         caloriesIn: undefined,
         caloriesOut: undefined
       });
+      setMealCals({ breakfast: null, lunch: null, dinner: null });
     }
   }, [date, data.logs]);
 
@@ -59,38 +76,113 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
     onBack();
   };
 
-  const handleSmartCalculate = async () => {
-    if (!entry.breakfast && !entry.lunch && !entry.dinner) {
-      alert("请先填写今天的饮食内容哦~ 🍱");
-      return;
-    }
+  // Helper to calculate a single meal's calories
+  const calculateSingleMeal = async (type: MealType, text: string): Promise<number> => {
+    if (!text.trim()) return 0;
     
-    setIsAnalyzing(true);
+    // Pass the text to the corresponding argument, others empty
+    const b = type === 'breakfast' ? text : '';
+    const l = type === 'lunch' ? text : '';
+    const d = type === 'dinner' ? text : '';
+    
     try {
-      const calories = await analyzeFoodCalories(
-        entry.breakfast || '', 
-        entry.lunch || '', 
-        entry.dinner || ''
-      );
-      
-      if (calories) {
-        setEntry(prev => ({ ...prev, caloriesIn: calories }));
-      } else {
-        alert("输入太少啦，小助手估算不出来 >_<");
-      }
+      const cal = await analyzeFoodCalories(b, l, d);
+      return cal || 0;
     } catch (e) {
-      console.error(e);
-      alert("计算出错啦，请重试");
-    } finally {
-      setIsAnalyzing(false);
+      console.warn(`Failed to calculate ${type}`, e);
+      return 0;
     }
   };
 
-  const mealConfig = [
-    { label: '早餐', key: 'breakfast', icon: '🍳', placeholder: '早餐吃了什么美味呀？' },
-    { label: '午餐', key: 'lunch', icon: '🍱', placeholder: '午餐吃了多少呢？' },
-    { label: '晚餐', key: 'dinner', icon: '🥗', placeholder: '晚餐要清淡一点哦~' }
-  ];
+  // Handle blur event: calculate specific meal and auto-sum others if needed
+  const handleMealBlur = async (type: MealType) => {
+    const text = (entry[type as keyof DailyLog] as string) || '';
+    
+    // Don't recalculate if text hasn't changed effectively (optimization skipped for simplicity/robustness)
+    // Or if text is empty, just reset that meal cal
+    if (!text.trim()) {
+       setMealCals(prev => {
+          const newState = { ...prev, [type]: null };
+          updateTotalCalories(newState); // Recalculate total with 0 for this meal
+          return newState;
+       });
+       return;
+    }
+
+    setAnalyzingStates(prev => ({ ...prev, [type]: true }));
+
+    // 1. Calculate THIS meal
+    const currentCal = await calculateSingleMeal(type, text);
+
+    // 2. Check if other meals have text but NO calculated value (e.g., initial load)
+    // We do this concurrently
+    const otherMeals: MealType[] = (['breakfast', 'lunch', 'dinner'] as MealType[]).filter(t => t !== type);
+    const missingCalUpdates: Partial<{ [key in MealType]: number }> = {};
+
+    await Promise.all(otherMeals.map(async (otherType) => {
+       const otherText = (entry[otherType as keyof DailyLog] as string) || '';
+       // If there is text, but we haven't calculated it locally yet
+       if (otherText.trim() && mealCals[otherType] === null) {
+          setAnalyzingStates(prev => ({ ...prev, [otherType]: true }));
+          const cal = await calculateSingleMeal(otherType, otherText);
+          missingCalUpdates[otherType] = cal;
+          setAnalyzingStates(prev => ({ ...prev, [otherType]: false }));
+       }
+    }));
+
+    // 3. Update all states
+    setMealCals(prev => {
+      const newState = { 
+        ...prev, 
+        [type]: currentCal,
+        ...missingCalUpdates 
+      };
+      
+      // 4. Update Total Calories immediately
+      updateTotalCalories(newState);
+      
+      return newState;
+    });
+
+    setAnalyzingStates(prev => ({ ...prev, [type]: false }));
+  };
+
+  const updateTotalCalories = (cals: { [key in MealType]: number | null }) => {
+    const total = (cals.breakfast || 0) + (cals.lunch || 0) + (cals.dinner || 0);
+    if (total > 0) {
+      setEntry(prev => ({ ...prev, caloriesIn: total }));
+    }
+  };
+
+  const renderMealInput = (label: string, key: MealType, icon: string, placeholder: string) => (
+    <div className="space-y-1">
+      <div className="flex justify-between items-end">
+        <label className="text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1">
+          {icon} {label}
+        </label>
+        {/* Dynamic Calorie Label */}
+        <div className="h-4 flex items-center">
+            {analyzingStates[key] ? (
+               <div className="flex items-center gap-1 text-[10px] text-primary animate-pulse">
+                 <Loader2 size={10} className="animate-spin"/> 计算中...
+               </div>
+            ) : mealCals[key] ? (
+               <div className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-md animate-in fade-in slide-in-from-bottom-1 duration-300">
+                  <Flame size={10} fill="currentColor" /> {mealCals[key]} kcal
+               </div>
+            ) : null}
+        </div>
+      </div>
+      <textarea
+        rows={2}
+        value={(entry as any)[key] || ''}
+        onChange={(e) => setEntry({...entry, [key]: e.target.value})}
+        onBlur={() => handleMealBlur(key)}
+        placeholder={placeholder}
+        className="w-full bg-gray-50 rounded-xl p-3 text-gray-700 text-sm outline-none focus:bg-white focus:ring-2 ring-primary/20 transition-all resize-none"
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-6 page-transition">
@@ -112,44 +204,25 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
         />
       </Card>
 
-      {/* Meals Input - Moved up for better flow with AI Calc */}
+      {/* Meals Input */}
       <Card title="饮食打卡 🥗">
         <div className="space-y-4">
-          {mealConfig.map((meal) => (
-            <div key={meal.key} className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1">
-                {meal.icon} {meal.label}
-              </label>
-              <textarea
-                rows={2}
-                value={(entry as any)[meal.key] || ''}
-                onChange={(e) => setEntry({...entry, [meal.key]: e.target.value})}
-                placeholder={meal.placeholder}
-                className="w-full bg-gray-50 rounded-xl p-3 text-gray-700 text-sm outline-none focus:bg-white focus:ring-2 ring-primary/20 transition-all resize-none"
-              />
-            </div>
-          ))}
+          {renderMealInput('早餐', 'breakfast', '🍳', '早餐吃了什么美味呀？')}
+          {renderMealInput('午餐', 'lunch', '🍱', '午餐吃了多少呢？')}
+          {renderMealInput('晚餐', 'dinner', '🥗', '晚餐要清淡一点哦~')}
         </div>
       </Card>
 
       {/* Calorie Tracking */}
       <Card title="热量档案 (kcal) 🔥">
-        <div className="mb-4 flex justify-between items-center bg-rose-50/50 p-2 rounded-xl">
-           <span className="text-xs text-rose-400 font-bold px-2">没概念？让小助手帮你 👇</span>
-           <button 
-             onClick={handleSmartCalculate}
-             disabled={isAnalyzing}
-             className="bg-white text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-rose-100 flex items-center gap-1 active:scale-95 transition-transform"
-           >
-             {isAnalyzing ? <Loader2 size={12} className="animate-spin"/> : <Calculator size={12} />}
-             {isAnalyzing ? "计算中..." : "智能计算"}
-           </button>
+        <div className="mb-2 text-xs text-gray-400 px-1">
+           * 输入饮食后会自动估算热量并汇总哦
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-rose-50 rounded-2xl p-3 relative overflow-hidden">
+          <div className="bg-rose-50 rounded-2xl p-3 relative overflow-hidden transition-all duration-300 ring-2 ring-transparent focus-within:ring-primary/20">
              <div className="flex items-center gap-1 text-xs text-rose-500 font-bold mb-1">
-               <Apple size={14} /> 摄入
+               <Apple size={14} /> 摄入 (汇总)
              </div>
              <input 
                type="number" 
