@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { LogEntry } from './pages/LogEntry';
 import { History } from './pages/History';
 import { Profile } from './pages/Profile';
+import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import { Home as HomeIcon, PenTool, Calendar, User } from 'lucide-react';
 
 const App = () => {
@@ -26,6 +27,19 @@ const App = () => {
   useEffect(() => {
     if (data) setData(getAppData());
   }, [currentTab]);
+
+  // Sync Avatar to iOS Home Screen Icon
+  useEffect(() => {
+    if (data?.profile?.avatar) {
+      const link = document.getElementById('dynamic-icon') as HTMLLinkElement;
+      if (link) {
+        // Create a temporary canvas to ensure the image is a square (iOS requirement mostly)
+        // or just use the base64 directly if it's already square-ish.
+        // For simplicity and performance, we use the avatar directly.
+        link.href = data.profile.avatar;
+      }
+    }
+  }, [data?.profile?.avatar]);
 
   const refreshData = () => {
     setData(getAppData());
@@ -82,6 +96,9 @@ const App = () => {
     // Main container uses 100dvh for proper mobile height and handles safe area paddings
     <div className="relative w-full h-full max-w-md mx-auto bg-transparent flex flex-col shadow-2xl overflow-hidden">
       
+      {/* IOS Install Prompt Overlay */}
+      <IOSInstallPrompt avatar={data.profile.avatar} />
+
       {/* Top Safe Area Spacer (Dynamic Island/Notch) */}
       <div className="w-full shrink-0" style={{ height: 'max(env(safe-area-inset-top), 20px)' }} />
 
