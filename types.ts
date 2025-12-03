@@ -25,6 +25,5 @@ export enum TabView {
   HOME = 'HOME',
   LOG = 'LOG',
   HISTORY = 'HISTORY',
-  AI = 'AI',
   PROFILE = 'PROFILE'
 }
