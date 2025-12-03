@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppData, TabView } from './types';
 import { getAppData, STORAGE_KEY } from './services/storage';
@@ -146,7 +147,7 @@ const App = () => {
   };
 
   return (
-    // Main container uses 100dvh for proper mobile height and handles safe area paddings
+    // Main container
     <div className="relative w-full h-full max-w-md mx-auto bg-transparent flex flex-col shadow-2xl overflow-hidden">
       
       {/* IOS Install Prompt Overlay */}
@@ -156,14 +157,16 @@ const App = () => {
       <div className="w-full shrink-0" style={{ height: 'max(env(safe-area-inset-top), 20px)' }} />
 
       {/* Main Content Scrollable Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-20 pt-4">
+      {/* Increase bottom padding (pb-28) to ensure content isn't hidden behind the fixed footer */}
+      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 pt-4">
         {renderContent()}
       </main>
 
       {/* Bottom Navigation */}
+      {/* Fixed positioning ensures it sticks to the bottom of the viewport (screen), handling PWA quirks better than absolute */}
       <nav 
-        className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-rose-50 z-50 rounded-t-2xl shadow-[0_-4px_20px_-5px_rgba(255,158,170,0.1)]"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
+        className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-rose-50 z-50 rounded-t-2xl shadow-[0_-4px_20px_-5px_rgba(255,158,170,0.1)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="grid grid-cols-4 h-[60px] items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
