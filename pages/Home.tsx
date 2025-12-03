@@ -1,7 +1,8 @@
+
 import React, { useMemo } from 'react';
 import { AppData } from '../types';
 import { Card } from '../components/Card';
-import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 import { Scale, TrendingDown, CalendarHeart, Clock } from 'lucide-react';
 
 interface HomeProps {
@@ -56,8 +57,12 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
           <p className="text-gray-500 text-sm mt-1">让我们一起努力达到 {profile.targetWeight}kg 吧！</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-xl shadow-sm">
-            🐰
+          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-xl shadow-sm overflow-hidden border border-white">
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              "🐰"
+            )}
           </div>
           <div className="bg-white/80 px-2 py-0.5 rounded-md text-[10px] font-bold text-primary shadow-sm flex items-center gap-1 border border-primary/10">
             <Clock size={10} /> 第 {daysOnPlan} 天
@@ -112,18 +117,41 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
 
       {/* Chart */}
       <Card title="体重趋势 📉">
-        <div className="h-48 w-full -ml-4">
+        <div className="h-56 w-full -ml-4 mt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#FF9EAA" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#FF9EAA" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 12}} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="date" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fill: '#9CA3AF', fontSize: 10}} 
+                dy={10}
+              />
+              <YAxis 
+                hide={false} 
+                axisLine={false} 
+                tickLine={false}
+                tick={{fill: '#9CA3AF', fontSize: 10}}
+                domain={['dataMin - 1', 'dataMax + 1']} 
+                width={30}
+              />
               <Tooltip 
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                cursor={{ stroke: '#FF9EAA', strokeWidth: 1, strokeDasharray: '3 3' }}
+              />
+              {/* Target Line */}
+              <ReferenceLine 
+                y={profile.targetWeight} 
+                stroke="#3AA6B9" 
+                strokeDasharray="3 3" 
+                label={{ position: 'right', value: '目标', fill: '#3AA6B9', fontSize: 10 }} 
               />
               <Area 
                 type="monotone" 
@@ -133,6 +161,7 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
                 fillOpacity={1} 
                 fill="url(#colorWeight)" 
                 animationDuration={1500}
+                activeDot={{ r: 6, strokeWidth: 0, fill: '#FF9EAA' }}
               />
             </AreaChart>
           </ResponsiveContainer>

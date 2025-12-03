@@ -1,6 +1,7 @@
+
 import { AppData, DailyLog, UserProfile } from '../types';
 
-const STORAGE_KEY = 'momo_fit_data_v2'; // Bumped version to force refresh default data
+const STORAGE_KEY = 'momo_fit_data_v3'; // Bumped version for schema change
 
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
@@ -28,6 +29,7 @@ const DEFAULT_DATA: AppData = {
     targetWeight: 46.8, // 8 catties = 4kg loss
     startDate: getRelativeTimestamp(-4),
     height: 165,
+    avatar: undefined // No default avatar, will show emoji
   },
   logs: {
     [dateMinus4]: {

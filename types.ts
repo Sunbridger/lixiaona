@@ -1,3 +1,4 @@
+
 export interface DailyLog {
   id: string; // ISO Date String YYYY-MM-DD
   date: number; // Timestamp
@@ -14,6 +15,7 @@ export interface UserProfile {
   targetWeight: number;
   startDate: number;
   height?: number; // cm
+  avatar?: string; // Base64 string of the image
 }
 
 export interface AppData {
