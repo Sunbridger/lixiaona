@@ -1,7 +1,6 @@
-
 import { AppData, DailyLog, UserProfile } from '../types';
 
-const STORAGE_KEY = 'momo_fit_data_v3'; // Bumped version for schema change
+export const STORAGE_KEY = 'momo_fit_data_v4'; // Exported for event listeners
 
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
@@ -15,62 +14,57 @@ const getRelativeTimestamp = (daysOffset: number): number => {
   return date.getTime();
 };
 
-// Generate data dynamically so it looks active "Today"
-const dateMinus4 = getRelativeDate(-4);
-const dateMinus3 = getRelativeDate(-3);
-const dateMinus2 = getRelativeDate(-2);
-const dateMinus1 = getRelativeDate(-1);
-const dateToday = getRelativeDate(0);
-
+// Default data populated with "Li Xiaona's Plan" (李小娜的计划)
+// Dates are dynamic relative to "today" so the demo always looks fresh.
 const DEFAULT_DATA: AppData = {
   profile: {
     name: '李小娜',
     startWeight: 50.8,
-    targetWeight: 46.8, // 8 catties = 4kg loss
-    startDate: getRelativeTimestamp(-4),
+    targetWeight: 46.8, // Goal: Lose 4kg (8 jin)
+    startDate: getRelativeTimestamp(-4), // Started 4 days ago
     height: 165,
-    avatar: undefined // No default avatar, will show emoji
+    avatar: undefined 
   },
   logs: {
-    [dateMinus4]: {
-      id: dateMinus4,
+    [getRelativeDate(-4)]: {
+      id: getRelativeDate(-4),
       date: getRelativeTimestamp(-4),
       weight: 50.8,
-      breakfast: '',
-      lunch: '',
-      dinner: '减脂计划开始！甩掉脂肪肝'
+      breakfast: '两个鸡蛋 半根玉米 一袋无糖酸奶',
+      lunch: '少量白米饭 + 清炒西葫芦',
+      dinner: '水煮虾 + 凉拌黄瓜 + 少量糙米'
     },
-    [dateMinus3]: {
-      id: dateMinus3,
+    [getRelativeDate(-3)]: {
+      id: getRelativeDate(-3),
       date: getRelativeTimestamp(-3),
       weight: 50.6,
-      breakfast: '两个鸡蛋 半根玉米 一袋无糖酸奶',
-      lunch: '少量白米饭 清炒西葫芦',
-      dinner: '水煮虾 凉拌黄瓜 少量糙米'
+      breakfast: '全麦面包一片 + 黑咖啡',
+      lunch: '鸡胸肉沙拉',
+      dinner: '一个苹果'
     },
-    [dateMinus2]: {
-      id: dateMinus2,
+    [getRelativeDate(-2)]: {
+      id: getRelativeDate(-2),
       date: getRelativeTimestamp(-2),
       weight: 50.4,
       breakfast: '一根水果黄瓜 一袋无糖酸奶',
-      lunch: '少量糙米 水煮虾 清炒青菜',
-      dinner: '少量米饭 青菜'
+      lunch: '少量糙米 + 水煮虾 + 清炒青菜',
+      dinner: '少量米饭 + 青菜'
     },
-    [dateMinus1]: {
-      id: dateMinus1,
+    [getRelativeDate(-1)]: {
+      id: getRelativeDate(-1),
       date: getRelativeTimestamp(-1),
       weight: 50.0,
       breakfast: '无',
-      lunch: '糙米 花菜 西红柿炒蛋',
-      dinner: '豆芽 红萝卜炒墨鱼'
+      lunch: '糙米 + 花菜 + 西红柿炒蛋',
+      dinner: '豆芽 + 红萝卜炒墨鱼'
     },
-    [dateToday]: {
-      id: dateToday,
+    [getRelativeDate(0)]: {
+      id: getRelativeDate(0),
       date: getRelativeTimestamp(0),
       weight: 49.9,
       breakfast: '无',
-      lunch: '2个红烧鸡翅 糙米 豌豆',
-      dinner: ''
+      lunch: '2个红烧鸡翅 + 糙米 + 豌豆',
+      dinner: '' // Dinner not yet eaten today
     }
   }
 };
@@ -78,8 +72,15 @@ const DEFAULT_DATA: AppData = {
 export const getAppData = (): AppData => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_DATA;
-    return JSON.parse(raw);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+    
+    // First time load: Save the default data immediately.
+    // This is crucial to "anchor" the startDate and other dynamic defaults 
+    // to the user's first visit time, ensuring persistence across refreshes.
+    saveAppData(DEFAULT_DATA);
+    return DEFAULT_DATA;
   } catch (e) {
     console.error("Failed to load data", e);
     return DEFAULT_DATA;
@@ -89,6 +90,8 @@ export const getAppData = (): AppData => {
 export const saveAppData = (data: AppData) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // Dispatch a custom event for same-window updates if needed, 
+    // though React state usually handles this. The 'storage' event handles cross-tab.
   } catch (e) {
     console.error("Failed to save data", e);
   }

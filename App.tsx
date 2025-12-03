@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppData, TabView } from './types';
-import { getAppData } from './services/storage';
+import { getAppData, STORAGE_KEY } from './services/storage';
 import { Home } from './pages/Home';
 import { LogEntry } from './pages/LogEntry';
 import { History } from './pages/History';
@@ -12,18 +12,30 @@ const App = () => {
   const [currentTab, setCurrentTab] = useState<TabView>(TabView.HOME);
   const [data, setData] = useState<AppData | null>(null);
 
-  // Load data on mount and whenever tab changes (to refresh views)
+  // Initial load
   useEffect(() => {
     // Simulate a tiny loading delay for smooth feel
     const load = async () => {
-       // Allow time for font to load or just a nice entrance
        await new Promise(r => setTimeout(r, 100));
        setData(getAppData());
     };
     load();
   }, []);
 
-  // Also refresh when switching tabs to ensure latest data
+  // Listen for storage changes (multi-tab sync or re-add to homescreen persistence checks)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      // If the specific key changed, or if clear() was called (key is null)
+      if (e.key === STORAGE_KEY || e.key === null) {
+        setData(getAppData());
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Refresh data when switching tabs to ensure internal consistency
   useEffect(() => {
     if (data) setData(getAppData());
   }, [currentTab]);
@@ -31,15 +43,57 @@ const App = () => {
   // Sync Avatar to iOS Home Screen Icon
   useEffect(() => {
     if (data?.profile?.avatar) {
-      const link = document.getElementById('dynamic-icon') as HTMLLinkElement;
-      if (link) {
-        // Create a temporary canvas to ensure the image is a square (iOS requirement mostly)
-        // or just use the base64 directly if it's already square-ish.
-        // For simplicity and performance, we use the avatar directly.
-        link.href = data.profile.avatar;
-      }
+      generateAppIcon(data.profile.avatar);
+    } else {
+      generateAppIcon(null);
     }
   }, [data?.profile?.avatar]);
+
+  // Dynamic Icon Generation Helper
+  const generateAppIcon = (avatarBase64: string | null) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 180;
+    canvas.height = 180;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw background
+    ctx.fillStyle = '#FF9EAA'; // Primary color
+    ctx.fillRect(0, 0, 180, 180);
+
+    if (avatarBase64) {
+      const img = new Image();
+      // Important: Allow cross origin if needed, though usually base64
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        // Crop to square cover
+        const size = Math.min(img.width, img.height);
+        const x = (img.width - size) / 2;
+        const y = (img.height - size) / 2;
+        
+        ctx.drawImage(img, x, y, size, size, 0, 0, 180, 180);
+        updateLinkTag(canvas.toDataURL('image/png'));
+      };
+      img.src = avatarBase64;
+    } else {
+      // Draw Default Emoji Icon
+      ctx.fillStyle = '#FFF9F9'; // Light background
+      ctx.fillRect(0, 0, 180, 180);
+      
+      ctx.font = '90px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐰', 90, 100);
+      updateLinkTag(canvas.toDataURL('image/png'));
+    }
+  };
+
+  const updateLinkTag = (dataUrl: string) => {
+    const link = document.getElementById('dynamic-icon') as HTMLLinkElement;
+    if (link) {
+      link.href = dataUrl;
+    }
+  };
 
   const refreshData = () => {
     setData(getAppData());
@@ -75,7 +129,6 @@ const App = () => {
         onClick={() => setCurrentTab(tab)}
         className={`flex flex-col items-center justify-center gap-1 w-full h-full group transition-all duration-200`}
       >
-        {/* Unified active state: Cute pill background for selected tab */}
         <div className={`
           flex items-center justify-center w-12 h-8 rounded-2xl transition-all duration-300
           ${isActive 
