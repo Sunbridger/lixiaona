@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppData, DailyLog } from '../types';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { saveDailyLog } from '../services/storage';
-import { ChevronLeft, Utensils, Save } from 'lucide-react';
+import { ChevronLeft, Save, Flame, Apple } from 'lucide-react';
 
 interface LogEntryProps {
   data: AppData;
@@ -22,7 +23,9 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
        weight: undefined,
        breakfast: '',
        lunch: '',
-       dinner: ''
+       dinner: '',
+       caloriesIn: undefined,
+       caloriesOut: undefined
      };
   });
 
@@ -38,7 +41,9 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
         weight: undefined,
         breakfast: '',
         lunch: '',
-        dinner: ''
+        dinner: '',
+        caloriesIn: undefined,
+        caloriesOut: undefined
       });
     }
   }, [date, data.logs]);
@@ -49,7 +54,6 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
       id: date,
       date: new Date(date).getTime()
     });
-    // Visual feedback could be added here
     onBack();
   };
 
@@ -91,6 +95,36 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
              className="text-4xl font-bold text-primary w-full outline-none placeholder:text-gray-200"
            />
            <span className="mb-2 text-gray-400 font-medium">kg</span>
+        </div>
+      </Card>
+
+      {/* Calorie Tracking */}
+      <Card title="热量档案 (kcal) 🔥">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-rose-50 rounded-2xl p-3">
+             <div className="flex items-center gap-1 text-xs text-rose-500 font-bold mb-1">
+               <Apple size={14} /> 摄入
+             </div>
+             <input 
+               type="number" 
+               placeholder="0"
+               value={entry.caloriesIn || ''}
+               onChange={(e) => setEntry({...entry, caloriesIn: parseInt(e.target.value) || undefined})}
+               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300"
+             />
+          </div>
+          <div className="bg-orange-50 rounded-2xl p-3">
+             <div className="flex items-center gap-1 text-xs text-orange-500 font-bold mb-1">
+               <Flame size={14} /> 运动/消耗
+             </div>
+             <input 
+               type="number" 
+               placeholder="0"
+               value={entry.caloriesOut || ''}
+               onChange={(e) => setEntry({...entry, caloriesOut: parseInt(e.target.value) || undefined})}
+               className="w-full bg-transparent text-2xl font-bold text-gray-700 outline-none placeholder:text-gray-300"
+             />
+          </div>
         </div>
       </Card>
 

@@ -1,6 +1,7 @@
+
 import { AppData, DailyLog, UserProfile } from '../types';
 
-export const STORAGE_KEY = 'momo_fit_data_v4'; // Exported for event listeners
+export const STORAGE_KEY = 'momo_fit_data_v5'; // Bump version to force update
 
 const getRelativeDate = (daysOffset: number): string => {
   const date = new Date();
@@ -32,7 +33,9 @@ const DEFAULT_DATA: AppData = {
       weight: 50.8,
       breakfast: '两个鸡蛋 半根玉米 一袋无糖酸奶',
       lunch: '少量白米饭 + 清炒西葫芦',
-      dinner: '水煮虾 + 凉拌黄瓜 + 少量糙米'
+      dinner: '水煮虾 + 凉拌黄瓜 + 少量糙米',
+      caloriesIn: 1250,
+      caloriesOut: 300
     },
     [getRelativeDate(-3)]: {
       id: getRelativeDate(-3),
@@ -40,7 +43,9 @@ const DEFAULT_DATA: AppData = {
       weight: 50.6,
       breakfast: '全麦面包一片 + 黑咖啡',
       lunch: '鸡胸肉沙拉',
-      dinner: '一个苹果'
+      dinner: '一个苹果',
+      caloriesIn: 1100,
+      caloriesOut: 450
     },
     [getRelativeDate(-2)]: {
       id: getRelativeDate(-2),
@@ -48,7 +53,9 @@ const DEFAULT_DATA: AppData = {
       weight: 50.4,
       breakfast: '一根水果黄瓜 一袋无糖酸奶',
       lunch: '少量糙米 + 水煮虾 + 清炒青菜',
-      dinner: '少量米饭 + 青菜'
+      dinner: '少量米饭 + 青菜',
+      caloriesIn: 1150,
+      caloriesOut: 200
     },
     [getRelativeDate(-1)]: {
       id: getRelativeDate(-1),
@@ -56,7 +63,9 @@ const DEFAULT_DATA: AppData = {
       weight: 50.0,
       breakfast: '无',
       lunch: '糙米 + 花菜 + 西红柿炒蛋',
-      dinner: '豆芽 + 红萝卜炒墨鱼'
+      dinner: '豆芽 + 红萝卜炒墨鱼',
+      caloriesIn: 980,
+      caloriesOut: 150
     },
     [getRelativeDate(0)]: {
       id: getRelativeDate(0),
@@ -64,7 +73,9 @@ const DEFAULT_DATA: AppData = {
       weight: 49.9,
       breakfast: '无',
       lunch: '2个红烧鸡翅 + 糙米 + 豌豆',
-      dinner: '' // Dinner not yet eaten today
+      dinner: '', // Dinner not yet eaten today
+      caloriesIn: 650, // Partial day
+      caloriesOut: 100
     }
   }
 };
@@ -77,8 +88,6 @@ export const getAppData = (): AppData => {
     }
     
     // First time load: Save the default data immediately.
-    // This is crucial to "anchor" the startDate and other dynamic defaults 
-    // to the user's first visit time, ensuring persistence across refreshes.
     saveAppData(DEFAULT_DATA);
     return DEFAULT_DATA;
   } catch (e) {
@@ -90,8 +99,6 @@ export const getAppData = (): AppData => {
 export const saveAppData = (data: AppData) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    // Dispatch a custom event for same-window updates if needed, 
-    // though React state usually handles this. The 'storage' event handles cross-tab.
   } catch (e) {
     console.error("Failed to save data", e);
   }

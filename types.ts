@@ -7,6 +7,8 @@ export interface DailyLog {
   lunch?: string;
   dinner?: string;
   mood?: 'happy' | 'neutral' | 'sad' | 'motivated';
+  caloriesIn?: number; // kCal
+  caloriesOut?: number; // kCal
 }
 
 export interface UserProfile {

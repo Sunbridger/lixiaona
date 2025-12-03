@@ -1,29 +1,68 @@
-import React, { useMemo } from 'react';
+
+import React, { useMemo, useState, useEffect } from 'react';
 import { AppData } from '../types';
 import { Card } from '../components/Card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
-import { Scale, TrendingDown, CalendarHeart, Clock } from 'lucide-react';
+import { Scale, TrendingDown, Clock, Flame, Apple, Sparkles } from 'lucide-react';
 
 interface HomeProps {
   data: AppData;
   onNavigateLog: () => void;
 }
 
+// Simple Logic for Diet Recommendations based on time of day
+const getRecommendation = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 10) {
+    return {
+      icon: "🍳",
+      title: "早餐吃得像女王",
+      text: "早餐是启动代谢的关键！推荐：全麦面包 + 鸡蛋 + 无糖豆浆/牛奶。优质蛋白能让你一上午不饿哦~"
+    };
+  } else if (hour >= 10 && hour < 14) {
+    return {
+      icon: "🥗",
+      title: "午餐营养要均衡",
+      text: "午餐法则：1拳主食(糙米/薯类) + 1掌心肉类(鸡胸/鱼虾) + 2拳蔬菜。细嚼慢咽更容易瘦！"
+    };
+  } else if (hour >= 14 && hour < 17) {
+    return {
+      icon: "🍵",
+      title: "下午茶小贴士",
+      text: "嘴馋了吗？试试吃个苹果、一小把坚果(10g)或者喝杯黑咖啡。拒绝奶茶诱惑！"
+    };
+  } else if (hour >= 17 && hour < 20) {
+    return {
+      icon: "🥣",
+      title: "晚餐清淡无负担",
+      text: "晚餐尽量在7点前吃完。推荐：凉拌黄瓜 + 水煮虾。少吃碳水，让身体在睡眠中持续燃脂。"
+    };
+  } else {
+    return {
+      icon: "🌙",
+      title: "深夜勿食",
+      text: "太晚吃东西会加重肠胃负担哦。如果实在饿得睡不着，喝一小杯温牛奶吧。早点休息，熬夜也会变胖！"
+    };
+  }
+};
+
 export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
   const { profile, logs } = data;
+  const [tip, setTip] = useState(getRecommendation());
+
+  useEffect(() => {
+    // Refresh tip logic occasionally
+    setTip(getRecommendation());
+  }, []);
 
   const chartData = useMemo(() => {
     const sortedLogKeys = Object.keys(logs).sort();
-    // Get last 7 entries or all if less than 7
     const recentKeys = sortedLogKeys.slice(-10);
-    
-    // Always include start
     const result = [{ date: '初始', weight: profile.startWeight }];
-    
     recentKeys.forEach(key => {
       if (logs[key].weight) {
         result.push({
-          date: key.slice(5), // MM-DD
+          date: key.slice(5),
           weight: logs[key].weight!
         });
       }
@@ -39,10 +78,14 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
     return profile.startWeight;
   }, [logs, profile]);
 
+  // Today's stats
+  const todayKey = new Date().toISOString().split('T')[0];
+  const todayLog = logs[todayKey];
+  const calIn = todayLog?.caloriesIn || 0;
+  const calOut = todayLog?.caloriesOut || 0;
+
   const weightLost = (profile.startWeight - (currentWeight || profile.startWeight)).toFixed(1);
   const progressPercent = Math.min(100, Math.max(0, ((profile.startWeight - (currentWeight || profile.startWeight)) / (profile.startWeight - profile.targetWeight)) * 100));
-
-  // Calculate days on plan
   const daysOnPlan = Math.max(1, Math.floor((Date.now() - profile.startDate) / (1000 * 60 * 60 * 24)) + 1);
 
   return (
@@ -92,6 +135,42 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
           </div>
           <div className="text-3xl font-bold text-gray-700 relative z-10">{weightLost}<span className="text-base font-normal text-gray-400">kg</span></div>
         </Card>
+      </div>
+
+      {/* Calories Summary */}
+      <div className="bg-white rounded-3xl p-4 shadow-soft border border-rose-50 flex items-center justify-around">
+          <div className="text-center">
+             <div className="flex items-center gap-1 text-xs text-gray-400 mb-1 justify-center"><Apple size={12}/> 摄入</div>
+             <div className="text-xl font-bold text-gray-800">{calIn}</div>
+          </div>
+          <div className="h-8 w-px bg-gray-100"></div>
+          <div className="text-center">
+             <div className="flex items-center gap-1 text-xs text-gray-400 mb-1 justify-center"><Flame size={12}/> 消耗</div>
+             <div className="text-xl font-bold text-gray-800">{calOut}</div>
+          </div>
+          <div className="h-8 w-px bg-gray-100"></div>
+          <div className="text-center">
+             <div className="flex items-center gap-1 text-xs text-gray-400 mb-1 justify-center">结余</div>
+             <div className={`text-xl font-bold ${calIn - calOut > 0 ? 'text-primary' : 'text-green-500'}`}>
+               {calIn - calOut}
+             </div>
+          </div>
+      </div>
+
+      {/* Diet Recommendation (Momo's Tip) */}
+      <div className="bg-gradient-to-r from-rose-50 to-white border border-rose-100 rounded-3xl p-4 shadow-sm relative overflow-hidden">
+         <div className="flex items-start gap-3 relative z-10">
+            <div className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm shrink-0">
+               {tip.icon}
+            </div>
+            <div>
+               <h3 className="font-bold text-primary text-sm flex items-center gap-1 mb-1">
+                  <Sparkles size={14}/> Momo 的饮食建议
+               </h3>
+               <h4 className="font-bold text-gray-800 text-sm mb-1">{tip.title}</h4>
+               <p className="text-xs text-gray-500 leading-relaxed">{tip.text}</p>
+            </div>
+         </div>
       </div>
 
       {/* Progress Bar */}
@@ -145,7 +224,6 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
                 cursor={{ stroke: '#FF9EAA', strokeWidth: 1, strokeDasharray: '3 3' }}
               />
-              {/* Target Line */}
               <ReferenceLine 
                 y={profile.targetWeight} 
                 stroke="#3AA6B9" 
@@ -167,19 +245,10 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
         </div>
       </Card>
 
-      {/* Today's Summary or CTA */}
-      <div className="bg-white/60 backdrop-blur-sm border border-white p-4 rounded-3xl flex items-center justify-between shadow-soft">
-         <div className="flex items-center gap-3">
-            <div className="bg-green-100 p-2 rounded-xl text-green-600">
-               <CalendarHeart size={20} />
-            </div>
-            <div className="text-sm">
-               <p className="font-bold text-gray-700">每日打卡</p>
-               <p className="text-gray-500 text-xs">记录今天的饮食，保持好身材！</p>
-            </div>
-         </div>
-         <button onClick={onNavigateLog} className="bg-white text-primary px-4 py-2 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-50 transition-colors">
-            去记录
+      {/* CTA Button */}
+      <div className="flex justify-center pb-4">
+         <button onClick={onNavigateLog} className="bg-primary text-white shadow-soft px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:scale-105 transition-transform">
+            <Apple size={18} /> 记录今日饮食 & 热量
          </button>
       </div>
     </div>
