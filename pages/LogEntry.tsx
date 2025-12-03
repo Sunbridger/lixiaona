@@ -5,7 +5,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { saveDailyLog } from '../services/storage';
 import { analyzeFoodCalories } from '../services/geminiService';
-import { ChevronLeft, Save, Flame, Apple, Sparkles, Loader2 } from 'lucide-react';
+import { ChevronLeft, Save, Flame, Apple, Sparkles, Loader2, Calculator } from 'lucide-react';
 
 interface LogEntryProps {
   data: AppData;
@@ -59,25 +59,31 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
     onBack();
   };
 
-  const handleAICalculate = async () => {
+  const handleSmartCalculate = async () => {
     if (!entry.breakfast && !entry.lunch && !entry.dinner) {
       alert("请先填写今天的饮食内容哦~ 🍱");
       return;
     }
     
     setIsAnalyzing(true);
-    const calories = await analyzeFoodCalories(
-      entry.breakfast || '', 
-      entry.lunch || '', 
-      entry.dinner || ''
-    );
-    
-    if (calories) {
-      setEntry(prev => ({ ...prev, caloriesIn: calories }));
-    } else {
-      alert("AI 暂时无法估算，请稍后再试或手动输入 >_<");
+    try {
+      const calories = await analyzeFoodCalories(
+        entry.breakfast || '', 
+        entry.lunch || '', 
+        entry.dinner || ''
+      );
+      
+      if (calories) {
+        setEntry(prev => ({ ...prev, caloriesIn: calories }));
+      } else {
+        alert("输入太少啦，小助手估算不出来 >_<");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("计算出错啦，请重试");
+    } finally {
+      setIsAnalyzing(false);
     }
-    setIsAnalyzing(false);
   };
 
   const mealConfig = [
@@ -129,14 +135,14 @@ export const LogEntry: React.FC<LogEntryProps> = ({ data, onBack }) => {
       {/* Calorie Tracking */}
       <Card title="热量档案 (kcal) 🔥">
         <div className="mb-4 flex justify-between items-center bg-rose-50/50 p-2 rounded-xl">
-           <span className="text-xs text-rose-400 font-bold px-2">没概念？让 AI 帮你算算 👇</span>
+           <span className="text-xs text-rose-400 font-bold px-2">没概念？让小助手帮你 👇</span>
            <button 
-             onClick={handleAICalculate}
+             onClick={handleSmartCalculate}
              disabled={isAnalyzing}
              className="bg-white text-primary text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm border border-rose-100 flex items-center gap-1 active:scale-95 transition-transform"
            >
-             {isAnalyzing ? <Loader2 size={12} className="animate-spin"/> : <Sparkles size={12} />}
-             {isAnalyzing ? "估算中..." : "AI 估算摄入"}
+             {isAnalyzing ? <Loader2 size={12} className="animate-spin"/> : <Calculator size={12} />}
+             {isAnalyzing ? "计算中..." : "智能计算"}
            </button>
         </div>
 

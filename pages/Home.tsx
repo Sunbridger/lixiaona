@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { AppData, DietRecommendation } from '../types';
 import { Card } from '../components/Card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
-import { Scale, TrendingDown, Clock, Flame, Apple, Sparkles, RefreshCw } from 'lucide-react';
+import { Scale, TrendingDown, Clock, Flame, Apple, Sparkles } from 'lucide-react';
 import { getDietRecommendation } from '../services/geminiService';
 import { saveDailyTip } from '../services/storage';
 
@@ -12,7 +12,7 @@ interface HomeProps {
   onNavigateLog: () => void;
 }
 
-// Fallback Static Logic
+// Fallback Static Logic (Double safety)
 const getStaticRecommendation = (): DietRecommendation => {
   const hour = new Date().getHours();
   let tip = { icon: "🌙", title: "早点休息", text: "早睡也是减肥的一部分哦！" };
@@ -29,7 +29,7 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
   const { profile, logs, dailyTip } = data;
   const todayStr = new Date().toISOString().split('T')[0];
   
-  // Use cached tip if available and from today, otherwise fallback or load new
+  // Use cached tip if available and from today, otherwise fallback
   const [tip, setTip] = useState<DietRecommendation>(() => {
     if (dailyTip && dailyTip.date === todayStr) {
       return dailyTip;
@@ -37,26 +37,26 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
     return getStaticRecommendation();
   });
   
-  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch AI Recommendation if cache is missing or stale
+  // Fetch Smart Recommendation if cache is missing or stale
   useEffect(() => {
     const shouldFetch = !dailyTip || dailyTip.date !== todayStr;
     
     if (shouldFetch) {
       let isMounted = true;
-      const fetchAiTip = async () => {
-        setIsAiLoading(true);
-        const aiTip = await getDietRecommendation(profile, logs);
-        if (isMounted && aiTip) {
-          setTip(aiTip);
-          saveDailyTip(aiTip); // Save to cache
+      const fetchTip = async () => {
+        setIsLoading(true);
+        // Call local smart engine
+        const smartTip = await getDietRecommendation(profile, logs);
+        if (isMounted && smartTip) {
+          setTip(smartTip);
+          saveDailyTip(smartTip); // Save to cache
         }
-        if (isMounted) setIsAiLoading(false);
+        if (isMounted) setIsLoading(false);
       };
 
-      // Small delay to ensure UI renders first
-      const timer = setTimeout(fetchAiTip, 1000);
+      const timer = setTimeout(fetchTip, 800);
       return () => { isMounted = false; clearTimeout(timer); };
     }
   }, [dailyTip, todayStr, profile, logs]);
@@ -162,25 +162,24 @@ export const Home: React.FC<HomeProps> = ({ data, onNavigateLog }) => {
           </div>
       </div>
 
-      {/* Diet Recommendation (Momo's Tip) - AI Powered with Cache */}
+      {/* Diet Recommendation (Momo's Tip) - Local Smart Engine */}
       <div className="bg-gradient-to-r from-rose-50 to-white border border-rose-100 rounded-3xl p-4 shadow-sm relative overflow-hidden group">
          <div className="flex items-start gap-3 relative z-10">
-            <div className={`text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm shrink-0 transition-transform ${isAiLoading ? 'animate-pulse' : ''}`}>
+            <div className={`text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-full shadow-sm shrink-0 transition-transform ${isLoading ? 'animate-pulse' : ''}`}>
                {tip.icon}
             </div>
             <div className="flex-1">
                <div className="flex justify-between items-center mb-1">
                  <h3 className="font-bold text-primary text-sm flex items-center gap-1">
-                    <Sparkles size={14} className={isAiLoading ? "animate-spin" : ""}/> 
+                    <Sparkles size={14} className={isLoading ? "animate-spin" : ""}/> 
                     Momo 的建议
                  </h3>
-                 {isAiLoading && <span className="text-[10px] text-gray-400">更新中...</span>}
                </div>
                
-               <h4 className={`font-bold text-gray-800 text-sm mb-1 transition-opacity duration-300 ${isAiLoading ? 'opacity-60' : 'opacity-100'}`}>
+               <h4 className={`font-bold text-gray-800 text-sm mb-1 transition-opacity duration-300 ${isLoading ? 'opacity-60' : 'opacity-100'}`}>
                  {tip.title}
                </h4>
-               <p className={`text-xs text-gray-500 leading-relaxed transition-opacity duration-300 ${isAiLoading ? 'opacity-60' : 'opacity-100'}`}>
+               <p className={`text-xs text-gray-500 leading-relaxed transition-opacity duration-300 ${isLoading ? 'opacity-60' : 'opacity-100'}`}>
                  {tip.text}
                </p>
             </div>

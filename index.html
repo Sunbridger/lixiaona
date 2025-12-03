@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-
+    
     <!-- PWA / iOS Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,6 +12,9 @@
     <link rel="apple-touch-icon" id="dynamic-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIAQMAAACXljzdAAAABlBMVEX/nqr///+yl3H4AAAAAnRSTlP/AOW3MEoAAAAySURBVHic7cExAQAAAMKg9U9tDQ+gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA4VQAAf45X0NAAAAABJRU5ErkJggg==">
 
     <title>MomoFit - 可爱减肥记录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -57,7 +60,7 @@
         overflow: hidden; /* Prevent body scroll, handle scroll in App container */
         overscroll-behavior: none; /* Prevent pull-to-refresh/rubber banding */
       }
-
+      
       body {
         -webkit-tap-highlight-color: transparent;
         background-color: #FFF9F9;
@@ -76,7 +79,7 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-
+      
       /* Smooth transitions */
       .page-transition {
         animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -85,12 +88,12 @@
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
       }
-
+      
       input[type="date"]::-webkit-calendar-picker-indicator {
         filter: invert(0.6) sepia(1) saturate(3) hue-rotate(315deg);
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
@@ -99,8 +102,7 @@
     "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>
