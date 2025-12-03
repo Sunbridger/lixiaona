@@ -5,7 +5,7 @@ import { Home } from './pages/Home';
 import { LogEntry } from './pages/LogEntry';
 import { History } from './pages/History';
 import { Profile } from './pages/Profile';
-import { Home as HomeIcon, PlusCircle, Calendar, User } from 'lucide-react';
+import { Home as HomeIcon, PenTool, Calendar, User } from 'lucide-react';
 
 const App = () => {
   const [currentTab, setCurrentTab] = useState<TabView>(TabView.HOME);
@@ -53,59 +53,54 @@ const App = () => {
     }
   };
 
+  const NavButton = ({ tab, icon: Icon, label }: { tab: TabView, icon: any, label: string }) => {
+    const isActive = currentTab === tab;
+    
+    return (
+      <button 
+        onClick={() => setCurrentTab(tab)}
+        className={`flex flex-col items-center justify-center gap-1 w-full h-full group transition-all duration-200`}
+      >
+        {/* Unified active state: Cute pill background for selected tab */}
+        <div className={`
+          flex items-center justify-center w-12 h-8 rounded-2xl transition-all duration-300
+          ${isActive 
+            ? 'bg-primary text-white shadow-soft scale-105' 
+            : 'bg-transparent text-gray-400 group-hover:text-primary group-hover:bg-rose-50'
+          }
+        `}>
+          <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+        </div>
+        <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? 'text-primary' : 'text-gray-400'}`}>
+          {label}
+        </span>
+      </button>
+    );
+  };
+
   return (
     // Main container uses 100dvh for proper mobile height and handles safe area paddings
     <div className="relative w-full h-full max-w-md mx-auto bg-transparent flex flex-col shadow-2xl overflow-hidden">
       
       {/* Top Safe Area Spacer (Dynamic Island/Notch) */}
-      {/* Using pt-safe-top logic via standard padding or specific pixel amount if env not supported well in all contexts, but tailored here */}
       <div className="w-full shrink-0" style={{ height: 'max(env(safe-area-inset-top), 20px)' }} />
 
       {/* Main Content Scrollable Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-28 pt-4">
+      <main className="flex-1 overflow-y-auto no-scrollbar px-5 pb-20 pt-4">
         {renderContent()}
       </main>
 
       {/* Bottom Navigation */}
-      {/* Added safe-area-inset-bottom padding support */}
       <nav 
-        className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/50 px-6 flex justify-around items-end z-50 rounded-t-[2.5rem] shadow-[0_-10px_40px_-5px_rgba(255,158,170,0.15)]"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)', paddingTop: '12px' }}
+        className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-rose-50 z-50 rounded-t-2xl shadow-[0_-4px_20px_-5px_rgba(255,158,170,0.1)]"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
-        <button 
-          onClick={() => setCurrentTab(TabView.HOME)}
-          className={`flex flex-col items-center gap-1 transition-all duration-300 w-16 ${currentTab === TabView.HOME ? 'text-primary -translate-y-1' : 'text-gray-300 hover:text-gray-400'}`}
-        >
-          <div className="relative">
-            <HomeIcon size={24} strokeWidth={currentTab === TabView.HOME ? 2.5 : 2} className={currentTab === TabView.HOME ? "opacity-0" : "opacity-100"} />
-            <HomeIcon size={24} strokeWidth={currentTab === TabView.HOME ? 2.5 : 2} fill="currentColor" className={`absolute top-0 left-0 ${currentTab === TabView.HOME ? "opacity-100" : "opacity-0"}`} />
-          </div>
-          <span className="text-[10px] font-bold">首页</span>
-        </button>
-
-        <button 
-          onClick={() => setCurrentTab(TabView.HISTORY)}
-          className={`flex flex-col items-center gap-1 transition-all duration-300 w-16 ${currentTab === TabView.HISTORY ? 'text-primary -translate-y-1' : 'text-gray-300 hover:text-gray-400'}`}
-        >
-          <Calendar size={24} strokeWidth={currentTab === TabView.HISTORY ? 2.5 : 2} />
-          <span className="text-[10px] font-bold">历史</span>
-        </button>
-
-        {/* Floating Add Button */}
-        <button 
-          onClick={() => setCurrentTab(TabView.LOG)}
-          className="relative -top-6 bg-gradient-to-tr from-primary to-rose-400 text-white p-4 rounded-full shadow-float hover:scale-105 transition-all duration-300 active:scale-95 group mx-2"
-        >
-          <PlusCircle size={32} className="group-hover:rotate-90 transition-transform duration-300" />
-        </button>
-        
-        <button 
-          onClick={() => setCurrentTab(TabView.PROFILE)}
-          className={`flex flex-col items-center gap-1 transition-all duration-300 w-16 ${currentTab === TabView.PROFILE ? 'text-primary -translate-y-1' : 'text-gray-300 hover:text-gray-400'}`}
-        >
-          <User size={24} strokeWidth={currentTab === TabView.PROFILE ? 2.5 : 2} />
-          <span className="text-[10px] font-bold">我的</span>
-        </button>
+        <div className="grid grid-cols-4 h-[60px] items-center px-2">
+          <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
+          <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
+          <NavButton tab={TabView.LOG} icon={PenTool} label="记录" />
+          <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
+        </div>
       </nav>
     </div>
   );
