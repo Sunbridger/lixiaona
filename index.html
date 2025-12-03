@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>MomoFit - 李小娜的减脂计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#FF9EAA',
+              secondary: '#FFD0D0',
+              accent: '#3AA6B9',
+              background: '#FFF9F9',
+              card: '#FFFFFF',
+              text: '#4A403A',
+              muted: '#9CA3AF'
+            },
+            fontFamily: {
+              sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+            },
+            boxShadow: {
+              'soft': '0 8px 30px -4px rgba(255, 158, 170, 0.15)',
+              'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
+              'float': '0 10px 40px -10px rgba(255, 158, 170, 0.3)',
+            },
+            animation: {
+              'bounce-slow': 'bounce 3s infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        -webkit-tap-highlight-color: transparent;
+        background-color: #FFF9F9;
+        /* Cute polka dot pattern */
+        background-image: radial-gradient(#FFD0D0 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+        color: #4A403A;
+      }
+      /* Hide scrollbar for clean UI */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      /* Smooth transitions */
+      .page-transition {
+        animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.6) sepia(1) saturate(3) hue-rotate(315deg);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
