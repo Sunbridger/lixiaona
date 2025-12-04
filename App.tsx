@@ -184,7 +184,7 @@ const App = () => {
       <main
         className="flex-1 overflow-y-auto no-scrollbar w-full"
         style={{
-          paddingBottom: '60px' // 60px nav + 40px buffer
+          paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' // Match nav height with safe area
         }}
       >
         <div
@@ -201,8 +201,13 @@ const App = () => {
       <ReloadPrompt />
 
       {/* Fixed Bottom Navigation */}
-      <div className="fixed -bottom-px left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100">
-        <nav className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100 flex flex-col"
+        style={{
+          height: 'calc(60px + env(safe-area-inset-bottom))'
+        }}
+      >
+        <nav className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2 flex-shrink-0">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
           <NavButton tab={TabView.LOG} icon={Plus} label="记一笔" isMain={true} />
