@@ -199,21 +199,17 @@ const App = () => {
       <ReloadPrompt />
 
       {/* Fixed Bottom Navigation */}
-      <nav
-        className="fixed left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50"
-        style={{
-          bottom: '0',
-          paddingBottom: 'env(safe-area-inset-bottom)'
-        }}
-      >
-        <div className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100">
+        <nav className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
           <NavButton tab={TabView.LOG} icon={Plus} label="记一笔" isMain={true} />
           <NavButton tab={TabView.AI_CHAT} icon={MessageCircleHeart} label="小助手" />
           <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
-        </div>
-      </nav>
+        </nav>
+        {/* Safe Area Spacer - Explicitly handles the home indicator area */}
+        <div className="w-full" style={{ height: 'env(safe-area-inset-bottom)' }} />
+      </div>
 
     </div>
   );
