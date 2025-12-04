@@ -183,7 +183,7 @@ const App = () => {
       <main
         className="flex-1 overflow-y-auto no-scrollbar w-full"
         style={{
-          paddingBottom: 'calc(60px + max(env(safe-area-inset-bottom), 20px) + 20px)'
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))'
         }}
       >
         <div
@@ -200,10 +200,10 @@ const App = () => {
 
       {/* Fixed Bottom Navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50 pb-safe"
+        className="fixed left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50"
         style={{
-          paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
-          bottom: '0'
+          bottom: '0',
+          paddingBottom: 'env(safe-area-inset-bottom)'
         }}
       >
         <div className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
