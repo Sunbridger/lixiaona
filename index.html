@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
+
     <!-- PWA / iOS Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -57,7 +57,7 @@
         overflow: hidden; /* Prevent body scroll, handle scroll in App container */
         overscroll-behavior: none; /* Prevent pull-to-refresh/rubber banding */
       }
-      
+
       body {
         -webkit-tap-highlight-color: transparent;
         background-color: #FFF9F9;
@@ -76,7 +76,7 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-      
+
       /* Smooth transitions */
       .page-transition {
         animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -85,7 +85,7 @@
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      
+
       input[type="date"]::-webkit-calendar-picker-indicator {
         filter: invert(0.6) sepia(1) saturate(3) hue-rotate(315deg);
       }
