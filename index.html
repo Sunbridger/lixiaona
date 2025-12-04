@@ -61,14 +61,13 @@
     <style>
       html, body, #root {
         height: 100%;
-        height: 100dvh; /* Use dynamic viewport height for mobile browsers */
         margin: 0;
         padding: 0;
-        overflow: hidden; /* Prevent body scroll, handle scroll in App container */
-        overscroll-behavior: none; /* Prevent pull-to-refresh/rubber banding */
       }
 
       body {
+        overflow-x: hidden;
+        overscroll-behavior-y: none; /* 尽量减少下拉刷新，但保留垂直滚动 */
         -webkit-tap-highlight-color: transparent;
         background-color: #FFF9F9;
         /* Cute polka dot pattern */

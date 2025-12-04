@@ -10,8 +10,8 @@ interface AIChatProps {
 }
 
 export const AIChat: React.FC<AIChatProps> = ({ data }) => {
-  const defaultMessage: ChatMessage = { 
-    role: 'assistant', 
+  const defaultMessage: ChatMessage = {
+    role: 'assistant',
     content: `嗨！${data.profile.name}，我是你的减肥小助手 Momo 酱！🐰✨\n今天吃得怎么样呀？有什么想问我的吗？`,
     timestamp: Date.now()
   };
@@ -46,19 +46,19 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const log = data.logs[todayStr];
     const list: string[] = [];
-    
+
     // 1. Based on recorded meals
     if (log) {
        const meals = [];
        if (log.breakfast) meals.push("早餐");
        if (log.lunch) meals.push("午餐");
        if (log.dinner) meals.push("晚餐");
-       
+
        if (meals.length > 0) {
          list.push(`分析${meals.join('+')}的热量`);
          list.push(`今天吃的${meals[0]}健康吗？`);
        }
-       
+
        if (log.weight) {
           list.push(`我现在的体重${log.weight}kg需要注意什么？`);
        }
@@ -77,7 +77,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
        list.push("推荐几个燃脂运动");
        list.push("平台期怎么破？");
     }
-    
+
     // Shuffle and pick top 4 to keep it fresh
     return list.sort(() => 0.5 - Math.random()).slice(0, 4);
   }, [data.logs]);
@@ -96,8 +96,31 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
     }));
     history.push({ role: 'user', content: userMsg.content });
 
-    const replyContent = await chatWithMomo(history, data.profile);
-    
+    // Detect if user is asking for today's calorie analysis, and auto-attach today's diet data.
+    const lowerText = text.toLowerCase();
+    const isCalorieQuestion =
+      /热量|卡路里|大卡|卡\b/.test(text) &&
+      /(今天|今日|这天|当天)/.test(text);
+
+    let extraContext: string | undefined;
+    if (isCalorieQuestion) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayLog = data.logs[todayStr];
+      if (todayLog) {
+        const { breakfast, lunch, dinner, caloriesIn, weight } = todayLog;
+        extraContext = [
+          `日期: ${todayStr}`,
+          breakfast ? `早餐: ${breakfast}` : '早餐: 未记录',
+          lunch ? `午餐: ${lunch}` : '午餐: 未记录',
+          dinner ? `晚餐: ${dinner}` : '晚餐: 未记录',
+          typeof caloriesIn === 'number' ? `已记录总摄入: ${caloriesIn} kcal` : '已记录总摄入: 未填写',
+          typeof weight === 'number' ? `当天体重: ${weight} kg` : '当天体重: 未记录'
+        ].join('；');
+      }
+    }
+
+    const replyContent = await chatWithMomo(history, data.profile, extraContext);
+
     setMessages(prev => [...prev, { role: 'assistant', content: replyContent, timestamp: Date.now() }]);
     setIsLoading(false);
   };
@@ -106,7 +129,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
     if (window.confirm('确定要清空和 Momo 的聊天记录吗？')) {
       const resetState = [defaultMessage];
       setMessages(resetState);
-      saveChatHistory([]); 
+      saveChatHistory([]);
     }
   };
 
@@ -117,20 +140,20 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
   return (
     // Root container: Using min-h to ensure full coverage but NO animations on root to prevent jumps
     <div className="-mx-4 -mt-4 flex flex-col min-h-[100dvh] bg-[#FFF9F9] relative">
-      
+
       {/* Subtle Header */}
       <header className="sticky top-0 z-30 flex items-center justify-center py-2 bg-[#FFF9F9]/80 backdrop-blur-md h-10 border-b border-rose-50/50">
          <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 opacity-80">
             Momo 小助手 🐰
          </span>
       </header>
-      
+
       {/* Messages Area - Removed 'animate-in' to prevent layout shifting/jumping on load */}
       <div className="flex-1 px-4 py-2 pb-48">
          {/* Clear Button */}
          {messages.length > 1 && (
             <div className="flex justify-center mb-6 opacity-40 hover:opacity-100 transition-opacity">
-                <button 
+                <button
                   onClick={handleClearHistory}
                   className="text-[10px] text-gray-400 flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full border border-gray-100/50"
                 >
@@ -140,8 +163,8 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
          )}
 
         {messages.map((msg, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`flex items-start gap-3 mb-6 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
             {/* Avatar - Top Aligned via items-start on parent */}
@@ -159,8 +182,8 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
 
             {/* Bubble */}
             <div className={`max-w-[78%] px-4 py-2.5 text-sm leading-relaxed shadow-sm relative group ${
-              msg.role === 'user' 
-                ? 'bg-gradient-to-br from-primary to-rose-400 text-white rounded-2xl rounded-tr-sm shadow-soft' 
+              msg.role === 'user'
+                ? 'bg-gradient-to-br from-primary to-rose-400 text-white rounded-2xl rounded-tr-sm shadow-soft'
                 : 'bg-white text-gray-700 rounded-2xl rounded-tl-sm border border-rose-50'
             }`}>
               {msg.content.split('\n').map((line, i) => (
@@ -184,7 +207,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
       </div>
 
       {/* Fixed Bottom Input Area */}
-      <div 
+      <div
         className="fixed left-0 right-0 max-w-md mx-auto z-40 flex flex-col justify-end pointer-events-none transform-gpu translate-z-0"
         style={{ bottom: 'calc(60px + env(safe-area-inset-bottom))' }}
       >
@@ -206,15 +229,15 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
         {/* Input Bar */}
         <div className="bg-white/95 backdrop-blur-md border-t border-rose-100 p-3 pointer-events-auto shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
           <div className="flex items-end gap-2 bg-gray-50 rounded-3xl px-2 py-2 ring-1 ring-gray-100 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="想问点什么...？"
               className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 px-3 py-2 placeholder:text-gray-400"
             />
-            <button 
+            <button
               onClick={() => handleSend()}
               disabled={!inputText.trim() || isLoading}
               className="bg-primary text-white w-9 h-9 rounded-full shadow-md flex items-center justify-center hover:bg-rose-500 active:scale-90 disabled:opacity-50 disabled:scale-100 transition-all duration-200 shrink-0 mb-0.5"

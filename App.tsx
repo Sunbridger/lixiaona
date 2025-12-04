@@ -177,7 +177,7 @@ const App = () => {
   };
 
   return (
-    // Main container - Fixed to viewport height
+    // Main container - 固定占满视口高度，由 body 控制整体高度
     <div className="h-full w-full bg-[#FFF9F9] flex flex-col overflow-hidden relative">
 
       {/* Scrollable Content Area */}
@@ -200,11 +200,12 @@ const App = () => {
       <IOSInstallPrompt avatar={data.profile.avatar} />
       <ReloadPrompt />
 
-      {/* Fixed Bottom Navigation */}
+      {/* Fixed Bottom Navigation - 吸底并适配 iOS 安全区域 */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
+        className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
         style={{
-          paddingBottom: 'env(safe-area-inset-bottom)'
+          bottom: 'env(safe-area-inset-bottom)',
+          paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
         }}
       >
         <nav className="max-w-md mx-auto h-[60px] flex items-center justify-between px-4">

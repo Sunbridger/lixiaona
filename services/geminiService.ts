@@ -15,13 +15,13 @@ const TIMEOUT_MS = 10000; // API 请求超时时间
 // 基础食物热量库 (单位: kcal/份)
 const FOOD_CALORIES: Record<string, number> = {
   // 主食
-  '米饭': 220, '饭': 220, '粥': 120, '馒头': 220, '包子': 200, 
-  '面条': 300, '面': 300, '粉': 280, '吐司': 100, '面包': 150, 
+  '米饭': 220, '饭': 220, '粥': 120, '馒头': 220, '包子': 200,
+  '面条': 300, '面': 300, '粉': 280, '吐司': 100, '面包': 150,
   '全麦': 120, '玉米': 100, '红薯': 130, '紫薯': 130, '燕麦': 150,
   '糙米': 110, '荞麦': 100, '藜麦': 120,
 
   // 蛋白质
-  '鸡蛋': 80, '蛋': 80, '荷包蛋': 150, '水煮蛋': 80, 
+  '鸡蛋': 80, '蛋': 80, '荷包蛋': 150, '水煮蛋': 80,
   '牛奶': 130, '豆浆': 100, '酸奶': 120, '豆奶': 110,
   '鸡胸': 130, '鸡肉': 180, '鸡腿': 260, '鸡翅': 220, '红烧鸡翅': 250,
   '牛肉': 200, '牛排': 300, '猪肉': 350, '排骨': 300, '五花肉': 400,
@@ -48,13 +48,13 @@ const analyzeLocal = (text: string): number => {
       const regex = new RegExp(`(\\d+|[一二三四五六七八九十]+)\\s*[个只份碗杯勺片]*\\s*${key}`);
       const match = text.match(regex);
       let multiplier = 1;
-      
+
       if (match) {
          const numStr = match[1];
          const mapCN: Record<string, number> = {'一':1, '二':2, '两':2, '三':3, '四':4, '五':5};
          multiplier = parseFloat(numStr) || mapCN[numStr] || 1;
       }
-      
+
       total += FOOD_CALORIES[key] * multiplier;
     }
   });
@@ -111,7 +111,7 @@ export const suggestFoodPortions = async (text: string): Promise<string[]> => {
     请分析用户输入的最后一个食物词汇。
     如果该食物没有数量单位，请返回 3-4 个常见的份量单位建议。
     如果用户已经输入了详细的数量，则返回相关的补充建议（如做法或搭配），或者返回空数组。
-    
+
     输出要求：
     仅返回一个 JSON 字符串数组，不要包含任何 markdown 格式。
     例如输入"米饭"，输出 ["1碗 (150g)", "半碗 (100g)", "100g"]
@@ -146,11 +146,11 @@ export const analyzeFoodCalories = async (breakfast: string, lunch: string, dinn
 
   // 1. Try Local Analysis First for fast feedback (optional mixed approach)
   // For now, let's trust AI but use local as fallback if AI fails entirely.
-  
+
   const prompt = `
     请分析以下饮食摄入的总热量（单位：千卡 kcal）。
     饮食记录: "${combined}"
-    
+
     规则：
     1. 仔细识别食物名称和数量（如 "2个鸡蛋", "150g米饭"）。
     2. 如果没有单位（如只写了"米饭"），请按常规一人份（如1碗/150g）估算。
@@ -207,14 +207,14 @@ export const getDietRecommendation = async (profile: UserProfile, logs: Record<s
 
   const prompt = `
     角色: Momo酱 (私人减肥助手，语气元气可爱、治愈，喜欢用emoji 🐰✨💪)。
-    
+
     用户档案:
     - 名字: ${profile.name}
     - 目标: ${profile.targetWeight}kg
     - 近期体重走势: 从 ${startWeightOfPeriod}kg 变成 ${latestWeight}kg (变化 ${weightDiff}kg)
     - 近7天记录: ${context}
     - 平均摄入: ${Math.round(avgCalories)} kcal/day
-    
+
     当前时间: ${timeContext} (${currentHour}点)
 
     任务:
@@ -257,13 +257,22 @@ export const getDietRecommendation = async (profile: UserProfile, logs: Record<s
 // ------------------------------------------
 // Feature: AI Chat
 // ------------------------------------------
-export const chatWithMomo = async (history: any[], profile: UserProfile): Promise<string> => {
+export const chatWithMomo = async (
+  history: any[],
+  profile: UserProfile,
+  extraContext?: string
+): Promise<string> => {
   const systemPrompt = `
     你叫Momo酱，是一个可爱的私人减肥助手（兔子形象）。
     用户叫 ${profile.name}。
     你的语气要非常可爱、元气、充满鼓励，多用emoji (🐰, ✨, 💪, 🥗)。
     回答要简短精炼，不要长篇大论。
     如果用户问吃什么，根据减肥原则推荐低卡食物。
+    ${
+      extraContext
+        ? `\n\n【以下是系统提供的用户当天饮食/体重等背景数据，请在需要的时候主动参考，但不要逐字照抄：\n${extraContext}\n】`
+        : ''
+    }
   `;
 
   const result = await callAI([
