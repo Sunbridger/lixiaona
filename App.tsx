@@ -199,7 +199,7 @@ const App = () => {
       <ReloadPrompt />
 
       {/* Fixed Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100 pb-[34px]">
+      <div className="fixed -bottom-px left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100 pb-[35px]">
         <nav className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
