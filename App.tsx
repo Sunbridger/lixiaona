@@ -10,6 +10,7 @@ import { AIChat } from './pages/AIChat';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { SplashScreen } from './components/SplashScreen';
+import { DeveloperInfo } from './components/DeveloperInfo';
 import { Home as HomeIcon, Plus, Calendar, User, MessageCircleHeart } from 'lucide-react';
 
 const App = () => {
@@ -191,6 +192,7 @@ const App = () => {
             style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
         >
            {renderContent()}
+           <DeveloperInfo />
         </div>
       </main>
 

@@ -1,2 +1,2 @@
 // Auto-generated file. Do not edit manually.
-export const APP_VERSION = 'v8';
+export const APP_VERSION = 'v9';
