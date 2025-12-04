@@ -220,7 +220,9 @@ const App = () => {
       <div
         className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
         style={{
-          bottom: 0,
+          // 在 standalone (添加到主屏幕后) 模式，让导航直接覆盖 Home 指示条区域；
+          // 在浏览器模式则保留安全区 + 额外 6px 的视觉留白。
+          bottom: isStandalone ? 'calc(env(safe-area-inset-bottom) * -1)' : 0,
           paddingBottom: isStandalone ? 0 : 'calc(env(safe-area-inset-bottom) + 6px)'
         }}
       >
