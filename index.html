@@ -66,6 +66,10 @@
       }
 
       body {
+        /* 顶部 / 底部安全区域，让整体页面在 iPhone 刘海和 Home 指示条外侧显示 */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+
         overflow-x: hidden;
         overscroll-behavior-y: none; /* 尽量减少下拉刷新，但保留垂直滚动 */
         -webkit-tap-highlight-color: transparent;

@@ -184,12 +184,13 @@ const App = () => {
       <main
         className="flex-1 overflow-y-auto no-scrollbar w-full"
         style={{
-          paddingBottom: 'calc(60px + env(safe-area-inset-bottom))' // 60px nav + safe area
+          // main 自己只关心底部导航的高度，顶部安全区交给 body 处理
+          paddingBottom: '60px'
         }}
       >
         <div
             className="max-w-md mx-auto p-4 min-h-full"
-            style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
+            style={{ paddingTop: 16 }}
         >
            {renderContent()}
            <DeveloperInfo />
