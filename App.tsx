@@ -8,6 +8,7 @@ import { History } from './pages/History';
 import { Profile } from './pages/Profile';
 import { AIChat } from './pages/AIChat';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
+import { ReloadPrompt } from './components/ReloadPrompt';
 import { Home as HomeIcon, Plus, Calendar, User, MessageCircleHeart } from 'lucide-react';
 
 const App = () => {
@@ -180,8 +181,9 @@ const App = () => {
         </div>
       </main>
 
-      {/* iOS Install Prompt Overlay */}
+      {/* PWA / Install Features */}
       <IOSInstallPrompt avatar={data.profile.avatar} />
+      <ReloadPrompt />
 
       {/* Fixed Bottom Navigation */}
       <nav 

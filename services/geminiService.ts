@@ -175,28 +175,71 @@ export const analyzeFoodCalories = async (breakfast: string, lunch: string, dinn
 // Feature: Daily Diet Tip (Home Page)
 // ------------------------------------------
 export const getDietRecommendation = async (profile: UserProfile, logs: Record<string, DailyLog>): Promise<DietRecommendation | null> => {
-  // Get recent 3 days logs context
-  const recentLogs = Object.values(logs).sort((a,b) => b.date - a.date).slice(0, 3);
+  // 1. Context Expansion: Get last 7 days of logs (Weekly analysis)
+  const recentLogs = Object.values(logs)
+    .filter(l => l.caloriesIn || l.weight || l.breakfast || l.lunch || l.dinner) // Filter out empty logs
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 7);
+
+  // Calculate stats
+  const latestWeight = recentLogs.find(l => l.weight)?.weight || profile.startWeight;
+  const startWeightOfPeriod = recentLogs[recentLogs.length - 1]?.weight || profile.startWeight;
+  const weightDiff = (latestWeight - startWeightOfPeriod).toFixed(1);
+  const avgCalories = recentLogs.reduce((sum, l) => sum + (l.caloriesIn || 0), 0) / (recentLogs.length || 1);
+
+  // Richer Context Construction
   const context = JSON.stringify(recentLogs.map(l => ({
-    d: l.id, w: l.weight, in: l.caloriesIn, out: l.caloriesOut
+    date: l.id.slice(5), // MM-DD
+    weight: l.weight,
+    calories: l.caloriesIn,
+    meals: [l.breakfast, l.lunch, l.dinner].filter(Boolean).join('|')
   })));
 
+  const currentHour = new Date().getHours();
+  let timeContext = "休息时间";
+  if (currentHour >= 6 && currentHour < 9) timeContext = "早餐前";
+  else if (currentHour >= 9 && currentHour < 11) timeContext = "早餐后/上午";
+  else if (currentHour >= 11 && currentHour < 13) timeContext = "午餐时间";
+  else if (currentHour >= 13 && currentHour < 15) timeContext = "午饭后";
+  else if (currentHour >= 15 && currentHour < 18) timeContext = "下午茶/运动前";
+  else if (currentHour >= 18 && currentHour < 20) timeContext = "晚餐时间";
+  else if (currentHour >= 20) timeContext = "夜间/休息前";
+
   const prompt = `
-    用户: ${profile.name}, 目标: ${profile.targetWeight}kg, 当前: ${profile.startWeight}kg。
-    最近记录: ${context}。
+    角色: Momo酱 (私人减肥助手，语气元气可爱、治愈，喜欢用emoji 🐰✨💪)。
     
-    请根据当前时间（${new Date().getHours()}点）和最近情况，给出一个简短、暖心且实用的减肥建议。
+    用户档案:
+    - 名字: ${profile.name}
+    - 目标: ${profile.targetWeight}kg
+    - 近期体重走势: 从 ${startWeightOfPeriod}kg 变成 ${latestWeight}kg (变化 ${weightDiff}kg)
+    - 近7天记录: ${context}
+    - 平均摄入: ${Math.round(avgCalories)} kcal/day
     
-    返回 JSON 格式:
+    当前时间: ${timeContext} (${currentHour}点)
+
+    任务:
+    请分析用户过去一周的饮食和体重数据，寻找规律，并结合当前时间点，给出一条最贴心的建议。
+
+    分析维度:
+    1. 饮食习惯: 是否有暴饮暴食？是否碳水过多？是否经常漏得一餐？
+    2. 体重反馈: 吃多了是否第二天重了？清淡了是否瘦了？(如果瘦了请大力夸奖！)
+    3. 时机: 现在的点应该做什么？(如: 还没睡就提醒早睡，饭点提醒吃蛋白质/蔬菜)
+
+    输出要求:
+    - 返回纯 JSON 格式。
+    - 标题简短有力(4-8字)。
+    - 内容(text)在30-50字之间，要有针对性，不要全是套话。
+
+    JSON 示例:
     {
-      "icon": "emoji",
-      "title": "短标题(4-6字)",
-      "text": "建议内容(20-30字)"
+      "icon": "📉",
+      "title": "体重下降啦！",
+      "text": "哇！看到你这几天晚饭吃得很清淡，体重真的掉了耶！继续保持，今晚也要多吃蔬菜哦 🥗✨"
     }
   `;
 
   const result = await callAI([
-    { role: "system", content: "你是Momo，一个可爱的减肥助手。语气活泼、可爱、鼓励。" },
+    { role: "system", content: "你是Momo，一个专业的AI营养师兼私人减肥教练。" },
     { role: "user", content: prompt }
   ], 0.7);
 
@@ -206,6 +249,7 @@ export const getDietRecommendation = async (profile: UserProfile, logs: Record<s
      const cleanJson = result.replace(/```json|```/g, '').trim();
      return JSON.parse(cleanJson);
   } catch (e) {
+    console.warn("Recommendation Parse Error", e);
     return null;
   }
 };
