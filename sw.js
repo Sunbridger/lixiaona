@@ -13,7 +13,10 @@ const PRECACHE_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/index.tsx',
-  '/App.tsx'
+  '/App.tsx',
+  '/splash.png',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 // CDN Domains to cache aggressively

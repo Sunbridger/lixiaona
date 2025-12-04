@@ -9,18 +9,28 @@ import { Profile } from './pages/Profile';
 import { AIChat } from './pages/AIChat';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
 import { ReloadPrompt } from './components/ReloadPrompt';
+import { SplashScreen } from './components/SplashScreen';
 import { Home as HomeIcon, Plus, Calendar, User, MessageCircleHeart } from 'lucide-react';
 
 const App = () => {
   const [currentTab, setCurrentTab] = useState<TabView>(TabView.HOME);
   const [data, setData] = useState<AppData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initial load
+  // Initial load with splash screen
   useEffect(() => {
-    // Simulate a tiny loading delay for smooth feel
     const load = async () => {
-       await new Promise(r => setTimeout(r, 100));
-       setData(getAppData());
+      // Show splash screen for at least 1.5 seconds for better UX
+      const minLoadTime = new Promise(r => setTimeout(r, 1500));
+      const dataLoad = new Promise(r => {
+        setTimeout(() => {
+          setData(getAppData());
+          r(null);
+        }, 100);
+      });
+
+      await Promise.all([minLoadTime, dataLoad]);
+      setIsLoading(false);
     };
     load();
   }, []);
@@ -33,7 +43,7 @@ const App = () => {
         setData(getAppData());
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
@@ -73,7 +83,7 @@ const App = () => {
         const size = Math.min(img.width, img.height);
         const x = (img.width - size) / 2;
         const y = (img.height - size) / 2;
-        
+
         ctx.drawImage(img, x, y, size, size, 0, 0, 180, 180);
         updateLinkTag(canvas.toDataURL('image/png'));
       };
@@ -82,7 +92,7 @@ const App = () => {
       // Draw Default Emoji Icon
       ctx.fillStyle = '#FFF9F9'; // Light background
       ctx.fillRect(0, 0, 180, 180);
-      
+
       ctx.font = '90px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -102,12 +112,10 @@ const App = () => {
     setData(getAppData());
   };
 
-  if (!data) return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#FFF9F9] text-primary gap-4">
-      <div className="text-6xl animate-bounce-slow">🐰</div>
-      <div className="font-bold text-lg animate-pulse">MomoFit 加载中...</div>
-    </div>
-  );
+  // Show splash screen during initial load
+  if (isLoading || !data) {
+    return <SplashScreen isLoading={true} />;
+  }
 
   const renderContent = () => {
     switch (currentTab) {
@@ -128,10 +136,10 @@ const App = () => {
 
   const NavButton = ({ tab, icon: Icon, label, isMain = false }: { tab: TabView, icon: any, label: string, isMain?: boolean }) => {
     const isActive = currentTab === tab;
-    
+
     if (isMain) {
       return (
-        <button 
+        <button
           onClick={() => setCurrentTab(tab)}
           className="flex flex-col items-center justify-center -mt-6 group"
         >
@@ -147,14 +155,14 @@ const App = () => {
     }
 
     return (
-      <button 
+      <button
         onClick={() => setCurrentTab(tab)}
         className={`flex flex-col items-center justify-center gap-1 w-full h-full group transition-all duration-200`}
       >
         <div className={`
           flex items-center justify-center w-10 h-8 rounded-2xl transition-all duration-300
-          ${isActive 
-            ? 'bg-primary text-white shadow-soft scale-105' 
+          ${isActive
+            ? 'bg-primary text-white shadow-soft scale-105'
             : 'bg-transparent text-gray-400 group-hover:text-primary group-hover:bg-rose-50'
           }
         `}>
@@ -170,10 +178,15 @@ const App = () => {
   return (
     // Main container - Fixed to viewport height
     <div className="h-full w-full bg-[#FFF9F9] flex flex-col overflow-hidden relative">
-      
+
       {/* Scrollable Content Area */}
-      <main className="flex-1 overflow-y-auto no-scrollbar w-full pb-40">
-        <div 
+      <main
+        className="flex-1 overflow-y-auto no-scrollbar w-full"
+        style={{
+          paddingBottom: 'calc(60px + max(env(safe-area-inset-bottom), 20px) + 20px)'
+        }}
+      >
+        <div
             className="max-w-md mx-auto p-4 min-h-full"
             style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
         >
@@ -186,9 +199,12 @@ const App = () => {
       <ReloadPrompt />
 
       {/* Fixed Bottom Navigation */}
-      <nav 
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      <nav
+        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50 pb-safe"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom), 0px)',
+          bottom: '0'
+        }}
       >
         <div className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
@@ -198,7 +214,7 @@ const App = () => {
           <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
         </div>
       </nav>
-      
+
     </div>
   );
 };
