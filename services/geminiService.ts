@@ -1,5 +1,5 @@
 
-import { AppData, DietRecommendation } from "../types";
+import { AppData, DietRecommendation, UserProfile, DailyLog, ChatMessage } from "../types";
 
 // ==========================================
 // 配置区域
@@ -28,123 +28,49 @@ const FOOD_CALORIES: Record<string, number> = {
   '鱼': 120, '虾': 100, '豆腐': 80, '墨鱼': 90, '鱿鱼': 100,
 
   // 蔬果
-  '青菜': 40, '白菜': 30, '菠菜': 30, '西蓝花': 35, '生菜': 20, '花菜': 35,
-  '黄瓜': 20, '番茄': 30, '西红柿': 30, '胡萝卜': 40, '红萝卜': 40,
-  '西葫芦': 30, '豆芽': 30, '豌豆': 80,
-  '苹果': 50, '香蕉': 90, '梨': 50, '西瓜': 30, '葡萄': 60, 
-  '水果': 60, '沙拉': 150,
+  '青菜': 40, '白菜': 30, '菠菜': 30, '生菜': 20, '西兰花': 35,
+  '黄瓜': 20, '西红柿': 25, '番茄': 25, '胡萝卜': 40, '土豆': 80,
+  '苹果': 50, '香蕉': 90, '橙子': 50, '葡萄': 45, '西瓜': 30,
+  '草莓': 30, '蓝莓': 57,
 
-  // 饮料/零食
-  '咖啡': 15, '美式': 10, '拿铁': 180, '奶茶': 450, '可乐': 150,
-  '蛋糕': 350, '饼干': 200, '巧克力': 300, '薯片': 300,
-  '汉堡': 550, '薯条': 350, '披萨': 400, '火锅': 800, '烧烤': 600
+  // 其他
+  '咖啡': 10, '拿铁': 150, '美式': 5, '奶茶': 400, '可乐': 150,
+  '坚果': 600, '沙拉': 300, '蛋糕': 350, '饼干': 450
 };
 
-// 减肥建议知识库 (按时间段)
-const TIPS_DB = {
-  morning: [
-    { icon: "🌞", title: "元气早餐", text: "早安！早餐记得吃点蛋白质（鸡蛋/牛奶），开启一整天的高代谢！" },
-    { icon: "🥪", title: "碳水要适量", text: "早餐吃点粗粮面包或玉米，比白粥更抗饿哦！" },
-    { icon: "💧", title: "早起一杯水", text: "起床先喝温水，唤醒肠胃，加速排毒，皮肤也会变好！" },
-    { icon: "☕️", title: "消肿黑咖", text: "早上一杯黑咖啡，去水肿神器，还能提神醒脑！" }
-  ],
-  noon: [
-    { icon: "🍱", title: "午餐八分饱", text: "细嚼慢咽，每口嚼20下，大脑才有时间接收'吃饱了'的信号。" },
-    { icon: "🥗", title: "蔬菜先吃", text: "先吃蔬菜垫底，再吃肉和主食，可以平稳血糖，不易长胖。" },
-    { icon: "🍗", title: "补充优质蛋白", text: "午餐来点鸡胸肉或鱼虾，下午才不会饿得想吃零食。" }
-  ],
-  afternoon: [
-    { icon: "🍵", title: "拒绝奶茶", text: "想喝饮料？试试黑咖啡或无糖茶，0热量还能消水肿！" },
-    { icon: "🍎", title: "加餐首选", text: "饿了吃个苹果或一小把坚果，比吃饼干健康多啦。" },
-    { icon: "🥤", title: "多喝水", text: "有时候感觉饿其实是渴了，先喝杯水试试？" }
-  ],
-  evening: [
-    { icon: "🥣", title: "晚餐清淡", text: "晚餐少吃主食，多吃蔬菜和鱼虾，减轻肠胃负担。" },
-    { icon: "🚶‍♀️", title: "饭后走走", text: "吃完饭别马上躺下，靠墙站立15分钟或散步对消化很好哦。" },
-    { icon: "🥦", title: "控糖时刻", text: "晚上尽量避开高糖水果和甜点，让身体在睡眠中持续燃脂。" }
-  ],
-  late: [
-    { icon: "🌙", title: "早点睡吧", text: "熬夜容易掉肌肉长脂肪，早睡是性价比最高的减肥法！" },
-    { icon: "🚫", title: "忍住夜宵", text: "睡前3小时不进食，明早体重会给你惊喜的！坚持住！" },
-    { icon: "🛌", title: "美容觉", text: "放下手机，做个好梦。充足的睡眠能抑制食欲激素哦。" }
-  ]
-};
-
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
-// 本地热量估算函数
-const analyzeFoodCaloriesLocal = async (
-  breakfast: string,
-  lunch: string,
-  dinner: string
-): Promise<number | null> => {
-  console.log("🔍 [Local] Analyzing calories...");
-  await sleep(400); // 模拟少许延迟
-
+// 本地分析逻辑
+const analyzeLocal = (text: string): number => {
   let total = 0;
-  const combinedText = (breakfast + lunch + dinner).toLowerCase();
-  
-  if (!combinedText.trim()) return null;
-
-  let matchCount = 0;
-  for (const [key, cal] of Object.entries(FOOD_CALORIES)) {
-    if (combinedText.includes(key)) {
-      const regex = new RegExp(`(\\d+)[个碗份片块杯只]*${key}`);
-      const match = combinedText.match(regex);
-      const multiplier = match ? parseInt(match[1]) : 1;
+  Object.keys(FOOD_CALORIES).forEach(key => {
+    if (text.includes(key)) {
+      // 简单估算：如果出现关键字，默认算一份热量
+      // 进阶：可以尝试解析前面的数字，例如 "2个鸡蛋"
+      const regex = new RegExp(`(\\d+|[一二三四五六七八九十]+)\\s*[个只份碗杯勺片]*\\s*${key}`);
+      const match = text.match(regex);
+      let multiplier = 1;
       
-      total += cal * multiplier;
-      matchCount++;
+      if (match) {
+         const numStr = match[1];
+         const mapCN: Record<string, number> = {'一':1, '二':2, '两':2, '三':3, '四':4, '五':5};
+         multiplier = parseFloat(numStr) || mapCN[numStr] || 1;
+      }
+      
+      total += FOOD_CALORIES[key] * multiplier;
     }
-  }
-
-  if (matchCount === 0 || total < 100) {
-    if (breakfast.trim()) total += 300;
-    if (lunch.trim()) total += 450;
-    if (dinner.trim()) total += 350;
-    total += Math.floor(Math.random() * 50) - 25;
-  } else {
-    total = Math.round(total * 1.1);
-  }
-
-  return total > 0 ? total : null;
+  });
+  return total;
 };
 
-// 本地建议生成函数
-const getDietRecommendationLocal = async (
-  profile: AppData['profile'],
-  logs: AppData['logs']
-): Promise<DietRecommendation | null> => {
-  console.log("💡 [Local] Getting tip...");
-  await sleep(200);
-  
-  const hour = new Date().getHours();
-  let pool = TIPS_DB.morning;
-  
-  if (hour >= 11 && hour < 14) pool = TIPS_DB.noon;
-  else if (hour >= 14 && hour < 18) pool = TIPS_DB.afternoon;
-  else if (hour >= 18 && hour < 22) pool = TIPS_DB.evening;
-  else if (hour >= 22 || hour < 5) pool = TIPS_DB.late;
-
-  const tip = pool[Math.floor(Math.random() * pool.length)];
-  const personalizedText = tip.text.replace("早安！", `早安 ${profile.name}！`);
-  
-  return {
-    ...tip,
-    text: personalizedText,
-    date: new Date().toISOString().split('T')[0]
-  };
-};
 
 // ==========================================
-// 2. Kimi (Moonshot AI) API 服务
+// 2. 远程 AI 服务 (Moonshot / Gemini Proxy)
 // ==========================================
 
-const fetchFromMoonshot = async (messages: any[]): Promise<string> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
+async function callAI(messages: any[], temperature = 0.3) {
   try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     const response = await fetch(MOONSHOT_API_URL, {
       method: "POST",
       headers: {
@@ -154,108 +80,152 @@ const fetchFromMoonshot = async (messages: any[]): Promise<string> => {
       body: JSON.stringify({
         model: "moonshot-v1-8k",
         messages: messages,
-        temperature: 0.3
+        temperature: temperature
       }),
       signal: controller.signal
     });
-    clearTimeout(timeoutId);
+
+    clearTimeout(id);
 
     if (!response.ok) {
-       const errText = await response.text();
-       throw new Error(`Moonshot API Error ${response.status}: ${errText}`);
+       console.warn("AI API Error:", response.status);
+       return null;
     }
-    
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "";
+
+    const json = await response.json();
+    return json.choices?.[0]?.message?.content || null;
   } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
+    console.warn("AI Request Failed:", error);
+    return null;
+  }
+}
+
+// ------------------------------------------
+// Feature: Smart Food Portion Suggestions
+// ------------------------------------------
+export const suggestFoodPortions = async (text: string): Promise<string[]> => {
+  if (!text || text.length < 2) return [];
+
+  const prompt = `
+    用户正在记录饮食。输入: "${text}"。
+    请分析用户输入的最后一个食物词汇。
+    如果该食物没有数量单位，请返回 3-4 个常见的份量单位建议。
+    如果用户已经输入了详细的数量，则返回相关的补充建议（如做法或搭配），或者返回空数组。
+    
+    输出要求：
+    仅返回一个 JSON 字符串数组，不要包含任何 markdown 格式。
+    例如输入"米饭"，输出 ["1碗 (150g)", "半碗 (100g)", "100g"]
+    例如输入"鸡蛋"，输出 ["1个 (50g)", "2个", "100g"]
+  `;
+
+  const result = await callAI([
+    { role: "system", content: "你是专业的营养师助手，负责辅助用户记录饮食。" },
+    { role: "user", content: prompt }
+  ], 0.3);
+
+  if (!result) return [];
+
+  try {
+    // Clean up potential markdown code blocks
+    const cleanJson = result.replace(/```json|```/g, '').trim();
+    const suggestions = JSON.parse(cleanJson);
+    return Array.isArray(suggestions) ? suggestions.slice(0, 4) : [];
+  } catch (e) {
+    console.warn("Failed to parse suggestion JSON", e);
+    return [];
   }
 };
 
-// ==========================================
-// 3. 混合智能接口 (Exported)
-// ==========================================
 
-export const analyzeFoodCalories = async (
-  breakfast: string,
-  lunch: string,
-  dinner: string
-): Promise<number | null> => {
+// ------------------------------------------
+// Feature: Calorie Analysis
+// ------------------------------------------
+export const analyzeFoodCalories = async (breakfast: string, lunch: string, dinner: string): Promise<number | null> => {
+  const combined = `早餐:${breakfast}, 午餐:${lunch}, 晚餐:${dinner}`;
+  if (!breakfast && !lunch && !dinner) return 0;
+
+  // 1. Try Local Analysis First for fast feedback (optional mixed approach)
+  // For now, let's trust AI but use local as fallback if AI fails entirely.
+  
+  const prompt = `
+    请分析以下饮食摄入的总热量（单位：千卡 kcal）。
+    饮食记录: "${combined}"
+    
+    规则：
+    1. 仔细识别食物名称和数量（如 "2个鸡蛋", "150g米饭"）。
+    2. 如果没有单位（如只写了"米饭"），请按常规一人份（如1碗/150g）估算。
+    3. 仅返回一个纯数字（例如：1250），不要包含任何文字、解释或符号。
+  `;
+
+  const aiResult = await callAI([
+    { role: "system", content: "你是专业的营养师。你只输出数字结果。" },
+    { role: "user", content: prompt }
+  ]);
+
+  if (aiResult) {
+     const num = parseInt(aiResult.replace(/\D/g, ''));
+     if (!isNaN(num)) return num;
+  }
+
+  // Fallback to local engine
+  return analyzeLocal(breakfast) + analyzeLocal(lunch) + analyzeLocal(dinner);
+};
+
+// ------------------------------------------
+// Feature: Daily Diet Tip (Home Page)
+// ------------------------------------------
+export const getDietRecommendation = async (profile: UserProfile, logs: Record<string, DailyLog>): Promise<DietRecommendation | null> => {
+  // Get recent 3 days logs context
+  const recentLogs = Object.values(logs).sort((a,b) => b.date - a.date).slice(0, 3);
+  const context = JSON.stringify(recentLogs.map(l => ({
+    d: l.id, w: l.weight, in: l.caloriesIn, out: l.caloriesOut
+  })));
+
+  const prompt = `
+    用户: ${profile.name}, 目标: ${profile.targetWeight}kg, 当前: ${profile.startWeight}kg。
+    最近记录: ${context}。
+    
+    请根据当前时间（${new Date().getHours()}点）和最近情况，给出一个简短、暖心且实用的减肥建议。
+    
+    返回 JSON 格式:
+    {
+      "icon": "emoji",
+      "title": "短标题(4-6字)",
+      "text": "建议内容(20-30字)"
+    }
+  `;
+
+  const result = await callAI([
+    { role: "system", content: "你是Momo，一个可爱的减肥助手。语气活泼、可爱、鼓励。" },
+    { role: "user", content: prompt }
+  ], 0.7);
+
+  if (!result) return null;
+
   try {
-    if (!breakfast && !lunch && !dinner) return null;
-    console.log("🚀 [API] Attempting Moonshot AI analysis...");
-    
-    // 调用 API
-    const content = await fetchFromMoonshot([
-      { role: "system", content: "你是一个营养师。请根据用户输入的早午晚餐内容，估算总热量（大卡）。请只返回一个纯数字（整数），严禁包含任何文字、单位或标点符号。如果内容为空或无法估算，返回 0。" },
-      { role: "user", content: `早餐: ${breakfast}, 午餐: ${lunch}, 晚餐: ${dinner}` }
-    ]);
-    
-    // 解析结果
-    const calories = parseInt(content.trim());
-    if (isNaN(calories) || calories <= 0) throw new Error("Invalid API response format");
-    
-    console.log("✅ [API] Success:", calories);
-    return calories;
-
+     const cleanJson = result.replace(/```json|```/g, '').trim();
+     return JSON.parse(cleanJson);
   } catch (e) {
-    console.warn("⚠️ [API] Failed or timed out. Falling back to Local Engine.", e);
-    // 降级回本地逻辑
-    return analyzeFoodCaloriesLocal(breakfast, lunch, dinner);
+    return null;
   }
 };
 
-export const getDietRecommendation = async (
-  profile: AppData['profile'],
-  logs: AppData['logs']
-): Promise<DietRecommendation | null> => {
-  try {
-    console.log("🚀 [API] Attempting Moonshot AI recommendation...");
-    const hour = new Date().getHours();
-    
-    // 调用 API
-    const content = await fetchFromMoonshot([
-      { role: "system", content: "你叫Momo，是一个可爱、元气满满的减肥助手。请根据用户的档案和时间，给出一个简短（30字以内）、贴心且实用的减肥建议或鼓励。语气要像闺蜜一样亲切，多用emoji。" },
-      { role: "user", content: `用户:${profile.name}, 目标:${profile.targetWeight}kg. 当前时间:${hour}点。` }
-    ]);
+// ------------------------------------------
+// Feature: AI Chat
+// ------------------------------------------
+export const chatWithMomo = async (history: any[], profile: UserProfile): Promise<string> => {
+  const systemPrompt = `
+    你叫Momo酱，是一个可爱的私人减肥助手（兔子形象）。
+    用户叫 ${profile.name}。
+    你的语气要非常可爱、元气、充满鼓励，多用emoji (🐰, ✨, 💪, 🥗)。
+    回答要简短精炼，不要长篇大论。
+    如果用户问吃什么，根据减肥原则推荐低卡食物。
+  `;
 
-    if (!content.trim()) throw new Error("Empty API response");
+  const result = await callAI([
+    { role: "system", content: systemPrompt },
+    ...history
+  ]);
 
-    console.log("✅ [API] Success:", content);
-    return {
-      icon: "✨", 
-      title: "Momo的AI建议",
-      text: content,
-      date: new Date().toISOString().split('T')[0]
-    };
-
-  } catch (e) {
-    console.warn("⚠️ [API] Failed or timed out. Falling back to Local Engine.", e);
-    // 降级回本地逻辑
-    return getDietRecommendationLocal(profile, logs);
-  }
-};
-
-export const chatWithMomo = async (
-  history: { role: string; content: string }[],
-  profile: AppData['profile']
-): Promise<string> => {
-  try {
-    console.log("🚀 [API] Chatting with Moonshot AI...");
-    
-    const systemPrompt = `你叫“Momo酱”，是用户${profile.name}的私人减肥小助手。你的性格非常可爱、元气满满、像贴心的闺蜜。你的任务是鼓励用户坚持减肥、回答关于热量和饮食的问题、提供情绪价值。请用中文回答，多使用可爱的emoji（如🐰、✨、💪）。回复要简短精炼，不要长篇大论。`;
-
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...history
-    ];
-
-    const content = await fetchFromMoonshot(messages);
-    return content;
-
-  } catch (e) {
-    console.error("Chat API failed", e);
-    return "Momo 稍微有点累了（连接超时），请稍后再试哦~ 🐰💤";
-  }
+  return result || "Momo 好像睡着了... 稍后再试一下吧 🐰💤";
 };
