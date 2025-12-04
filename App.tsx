@@ -175,6 +175,31 @@ const App = () => {
     );
   };
 
+  // Safe Area Detection for iPhone Notch Devices
+  const [safeAreaHeight, setSafeAreaHeight] = useState('env(safe-area-inset-bottom)');
+
+  useEffect(() => {
+    const checkSafeArea = () => {
+      // Simple check for iOS devices with notch/home indicator
+      // Based on screen dimensions of known notch iPhones
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const height = window.screen.height;
+      const width = window.screen.width;
+
+      // Check for common notch device heights (iPhone X and newer)
+      // 812, 844, 852, 896, 926, 932 are common heights for notch iPhones
+      const isNotchPhone = isIOS && (height >= 812 || width >= 812);
+
+      if (isNotchPhone) {
+        // If it's a notch phone, ensure we have at least 34px bottom padding
+        // This acts as a fallback if env() fails or returns 0
+        setSafeAreaHeight('max(env(safe-area-inset-bottom), 34px)');
+      }
+    };
+
+    checkSafeArea();
+  }, []);
+
   return (
     // Main container - Fixed to viewport height
     <div className="h-full w-full bg-[#FFF9F9] flex flex-col overflow-hidden relative">
@@ -183,7 +208,7 @@ const App = () => {
       <main
         className="flex-1 overflow-y-auto no-scrollbar w-full"
         style={{
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))'
+          paddingBottom: `calc(80px + ${safeAreaHeight})`
         }}
       >
         <div
@@ -208,7 +233,7 @@ const App = () => {
           <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
         </nav>
         {/* Safe Area Spacer - Explicitly handles the home indicator area */}
-        <div className="w-full" style={{ height: 'env(safe-area-inset-bottom)' }} />
+        <div className="w-full" style={{ height: safeAreaHeight }} />
       </div>
 
     </div>
