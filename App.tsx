@@ -204,7 +204,7 @@ const App = () => {
       <div
         className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
         style={{
-          bottom: 'env(safe-area-inset-bottom)',
+          bottom: 0,
           paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
         }}
       >

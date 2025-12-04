@@ -1,7 +1,7 @@
 // Enhanced Service Worker for MomoFit PWA
 // Version: 6.0 - Comprehensive caching for instant loads
 
-const VERSION = 'v13'; // Bump this version to force update
+const VERSION = 'v14'; // Bump this version to force update
 const CACHE_NAME = `momofit-static-v${VERSION}`;
 const DYNAMIC_CACHE = `momofit-dynamic-v${VERSION}`;
 const ASSETS_CACHE = `momofit-assets-v${VERSION}`;
