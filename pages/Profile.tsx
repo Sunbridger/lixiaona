@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { AppData } from '../types';
+import { APP_VERSION } from '../src/version';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { saveProfile } from '../services/storage';
@@ -38,7 +39,7 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
   return (
     <div className="space-y-6 page-transition">
       <div className="flex flex-col items-center justify-center py-8">
-        <div 
+        <div
           onClick={handleAvatarClick}
           className="relative w-28 h-28 rounded-full mb-4 border-4 border-white shadow-float cursor-pointer group transition-transform active:scale-95 bg-rose-50 flex items-center justify-center overflow-hidden"
         >
@@ -49,17 +50,17 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
               🐰
             </div>
           )}
-          
+
           {/* Overlay hint */}
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="text-white" size={24} />
           </div>
         </div>
-        
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
           accept="image/*"
           onChange={handleFileChange}
         />
@@ -76,8 +77,8 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-400 block mb-1">昵称</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={profile.name}
                 onChange={(e) => setProfile({...profile, name: e.target.value})}
                 className="w-full font-semibold text-gray-700 outline-none placeholder:text-gray-300 bg-transparent"
@@ -92,8 +93,8 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-400 block mb-1">身高 (cm)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 value={profile.height || ''}
                 onChange={(e) => setProfile({...profile, height: parseFloat(e.target.value)})}
                 className="w-full font-semibold text-gray-700 outline-none placeholder:text-gray-300 bg-transparent"
@@ -112,8 +113,8 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-400 block mb-1">初始体重 (kg)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 step="0.1"
                 value={profile.startWeight}
                 onChange={(e) => setProfile({...profile, startWeight: parseFloat(e.target.value)})}
@@ -128,8 +129,8 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
             </div>
             <div className="flex-1">
               <label className="text-xs text-gray-400 block mb-1">目标体重 (kg)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 step="0.1"
                 value={profile.targetWeight}
                 onChange={(e) => setProfile({...profile, targetWeight: parseFloat(e.target.value)})}
@@ -149,6 +150,12 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
         <Save size={18} />
         保存档案
       </Button>
+
+      <div className="text-center pb-4">
+        <span className="text-[10px] text-gray-300 font-mono">
+          v{APP_VERSION.replace('v', '')}
+        </span>
+      </div>
     </div>
   );
 };
