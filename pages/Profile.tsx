@@ -150,12 +150,6 @@ export const Profile: React.FC<{ data: AppData; onSave: () => void }> = ({ data,
         <Save size={18} />
         保存档案
       </Button>
-
-      <div className="text-center pb-4">
-        <span className="text-[10px] text-gray-300 font-mono">
-          v{APP_VERSION.replace('v', '')}
-        </span>
-      </div>
     </div>
   );
 };
