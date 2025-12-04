@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { AppData, ChatMessage } from '../types';
 import { chatWithMomo } from '../services/geminiService';
 import { saveChatHistory } from '../services/storage';
-import { Send, User, Trash2, Sparkles, X } from 'lucide-react';
+import { Send, User, Trash2, Sparkles } from 'lucide-react';
 
 interface AIChatProps {
   data: AppData;
@@ -115,29 +115,26 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
   };
 
   return (
-    // Outer container breaks out of parent padding to allow full-width header/footer
-    // Removed 'relative' to prevent containing block issues if any
-    <div className="-mx-4 -mt-4 flex flex-col min-h-[100dvh] bg-[#FFF9F9]">
+    // Root container: Using min-h to ensure full coverage but NO animations on root to prevent jumps
+    <div className="-mx-4 -mt-4 flex flex-col min-h-[100dvh] bg-[#FFF9F9] relative">
       
-      {/* Header - Sticky */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-rose-100 h-14 flex items-center justify-center shadow-sm">
-         <div className="font-bold text-gray-700 flex items-center gap-2">
-            <span className="text-xl">🐰</span> 
-            <span>Momo 小助手</span>
-         </div>
+      {/* Subtle Header */}
+      <header className="sticky top-0 z-30 flex items-center justify-center py-2 bg-[#FFF9F9]/80 backdrop-blur-md h-10 border-b border-rose-50/50">
+         <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 opacity-80">
+            Momo 小助手 🐰
+         </span>
       </header>
       
-      {/* Messages Area */}
-      {/* Added extra padding bottom to account for fixed input area */}
-      <div className="flex-1 px-4 py-4 pb-48 animate-in fade-in duration-500">
+      {/* Messages Area - Removed 'animate-in' to prevent layout shifting/jumping on load */}
+      <div className="flex-1 px-4 py-2 pb-48">
          {/* Clear Button */}
          {messages.length > 1 && (
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-6 opacity-40 hover:opacity-100 transition-opacity">
                 <button 
                   onClick={handleClearHistory}
-                  className="text-xs text-gray-400 flex items-center gap-1 hover:text-rose-500 transition-colors bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100"
+                  className="text-[10px] text-gray-400 flex items-center gap-1 bg-white/50 px-3 py-1 rounded-full border border-gray-100/50"
                 >
-                  <Trash2 size={12} /> 清空聊天记录
+                  <Trash2 size={10} /> 清空记录
                 </button>
             </div>
          )}
@@ -147,21 +144,21 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
             key={index} 
             className={`flex items-start gap-3 mb-6 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
-            {/* Avatar */}
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm border-2 border-white overflow-hidden mt-0.5 ${
+            {/* Avatar - Top Aligned via items-start on parent */}
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border-2 border-white overflow-hidden mt-0 ${
               msg.role === 'user' ? 'bg-gray-100' : 'bg-primary text-white'
             }`}>
               {msg.role === 'user' ? (
                  data.profile.avatar ? (
                    <img src={data.profile.avatar} className="w-full h-full object-cover" alt="User"/>
-                 ) : <User size={20} className="text-gray-400" />
+                 ) : <User size={18} className="text-gray-400" />
               ) : (
-                <span className="text-xl">🐰</span>
+                <span className="text-lg">🐰</span>
               )}
             </div>
 
             {/* Bubble */}
-            <div className={`max-w-[75%] px-4 py-3 text-[15px] leading-relaxed shadow-sm relative group ${
+            <div className={`max-w-[78%] px-4 py-2.5 text-sm leading-relaxed shadow-sm relative group ${
               msg.role === 'user' 
                 ? 'bg-gradient-to-br from-primary to-rose-400 text-white rounded-2xl rounded-tr-sm shadow-soft' 
                 : 'bg-white text-gray-700 rounded-2xl rounded-tl-sm border border-rose-50'
@@ -175,8 +172,8 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
 
         {isLoading && (
           <div className="flex items-start gap-3 mb-6">
-             <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-sm border-2 border-white mt-0.5">🐰</div>
-             <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-rose-50 shadow-sm flex gap-1 items-center h-[46px]">
+             <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-sm border-2 border-white mt-0">🐰</div>
+             <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-rose-50 shadow-sm flex gap-1 items-center h-[42px]">
                 <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce"></div>
                 <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce delay-100"></div>
                 <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce delay-200"></div>
@@ -187,9 +184,8 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
       </div>
 
       {/* Fixed Bottom Input Area */}
-      {/* max-w-md mx-auto ensures it matches the app container width on desktop */}
       <div 
-        className="fixed left-0 right-0 max-w-md mx-auto z-40 flex flex-col justify-end pointer-events-none"
+        className="fixed left-0 right-0 max-w-md mx-auto z-40 flex flex-col justify-end pointer-events-none transform-gpu translate-z-0"
         style={{ bottom: 'calc(60px + env(safe-area-inset-bottom))' }}
       >
         {/* Suggestions Chips - Floating above */}
@@ -208,7 +204,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
         )}
 
         {/* Input Bar */}
-        <div className="bg-white border-t border-rose-100 p-3 pointer-events-auto shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
+        <div className="bg-white/95 backdrop-blur-md border-t border-rose-100 p-3 pointer-events-auto shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
           <div className="flex items-end gap-2 bg-gray-50 rounded-3xl px-2 py-2 ring-1 ring-gray-100 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <input 
               type="text" 
