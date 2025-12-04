@@ -27,15 +27,23 @@ export interface DietRecommendation {
   date?: string; // Cache key: YYYY-MM-DD
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: number;
+}
+
 export interface AppData {
   profile: UserProfile;
   logs: Record<string, DailyLog>; // Keyed by YYYY-MM-DD
   dailyTip?: DietRecommendation; // Cached tip for the day
+  chatHistory?: ChatMessage[]; // Persisted chat history
 }
 
 export enum TabView {
   HOME = 'HOME',
   LOG = 'LOG',
   HISTORY = 'HISTORY',
+  AI_CHAT = 'AI_CHAT',
   PROFILE = 'PROFILE'
 }

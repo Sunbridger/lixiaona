@@ -1,5 +1,5 @@
 
-import { AppData, DailyLog, UserProfile, DietRecommendation } from '../types';
+import { AppData, DailyLog, UserProfile, DietRecommendation, ChatMessage } from '../types';
 
 export const STORAGE_KEY = 'momo_fit_data_v6'; // Bump version for schema change
 
@@ -77,7 +77,8 @@ const DEFAULT_DATA: AppData = {
       caloriesOut: 100
     }
   },
-  dailyTip: undefined
+  dailyTip: undefined,
+  chatHistory: [] // Initialize empty chat history
 };
 
 export const getAppData = (): AppData => {
@@ -119,6 +120,12 @@ export const saveProfile = (profile: UserProfile) => {
 export const saveDailyTip = (tip: DietRecommendation) => {
   const data = getAppData();
   data.dailyTip = tip;
+  saveAppData(data);
+};
+
+export const saveChatHistory = (history: ChatMessage[]) => {
+  const data = getAppData();
+  data.chatHistory = history;
   saveAppData(data);
 };
 

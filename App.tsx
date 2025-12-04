@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppData, TabView } from './types';
 import { getAppData, STORAGE_KEY } from './services/storage';
@@ -5,8 +6,9 @@ import { Home } from './pages/Home';
 import { LogEntry } from './pages/LogEntry';
 import { History } from './pages/History';
 import { Profile } from './pages/Profile';
+import { AIChat } from './pages/AIChat';
 import { IOSInstallPrompt } from './components/IOSInstallPrompt';
-import { Home as HomeIcon, PenTool, Calendar, User } from 'lucide-react';
+import { Home as HomeIcon, Plus, Calendar, User, MessageCircleHeart } from 'lucide-react';
 
 const App = () => {
   const [currentTab, setCurrentTab] = useState<TabView>(TabView.HOME);
@@ -114,6 +116,8 @@ const App = () => {
         return <LogEntry data={data} onBack={() => setCurrentTab(TabView.HOME)} />;
       case TabView.HISTORY:
         return <History data={data} />;
+      case TabView.AI_CHAT:
+        return <AIChat data={data} />;
       case TabView.PROFILE:
         return <Profile data={data} onSave={() => { refreshData(); setCurrentTab(TabView.HOME); }} />;
       default:
@@ -121,16 +125,33 @@ const App = () => {
     }
   };
 
-  const NavButton = ({ tab, icon: Icon, label }: { tab: TabView, icon: any, label: string }) => {
+  const NavButton = ({ tab, icon: Icon, label, isMain = false }: { tab: TabView, icon: any, label: string, isMain?: boolean }) => {
     const isActive = currentTab === tab;
     
+    if (isMain) {
+      return (
+        <button 
+          onClick={() => setCurrentTab(tab)}
+          className="flex flex-col items-center justify-center -mt-6 group"
+        >
+          <div className={`
+            w-12 h-12 rounded-full flex items-center justify-center shadow-float border-4 border-white transition-transform duration-200
+            ${isActive ? 'bg-primary text-white scale-110' : 'bg-primary text-white hover:scale-105'}
+          `}>
+             <Icon size={28} strokeWidth={3} />
+          </div>
+          <span className="text-[10px] font-bold text-gray-400 mt-1">{label}</span>
+        </button>
+      );
+    }
+
     return (
       <button 
         onClick={() => setCurrentTab(tab)}
         className={`flex flex-col items-center justify-center gap-1 w-full h-full group transition-all duration-200`}
       >
         <div className={`
-          flex items-center justify-center w-12 h-8 rounded-2xl transition-all duration-300
+          flex items-center justify-center w-10 h-8 rounded-2xl transition-all duration-300
           ${isActive 
             ? 'bg-primary text-white shadow-soft scale-105' 
             : 'bg-transparent text-gray-400 group-hover:text-primary group-hover:bg-rose-50'
@@ -151,11 +172,6 @@ const App = () => {
       
       {/* Scrollable Content Area */}
       <main className="flex-1 overflow-y-auto no-scrollbar w-full pb-40">
-        {/* 
-            Use inline styles for padding-top to handle safe area correctly.
-            max(20px, env(safe-area-inset-top)) ensures we don't hit the notch,
-            but also keep 20px padding on non-notch devices.
-        */}
         <div 
             className="max-w-md mx-auto p-4 min-h-full"
             style={{ paddingTop: 'max(20px, env(safe-area-inset-top))' }}
@@ -172,10 +188,11 @@ const App = () => {
         className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 z-50"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="max-w-md mx-auto h-[60px] grid grid-cols-4 items-center px-2">
+        <div className="max-w-md mx-auto h-[60px] grid grid-cols-5 items-center px-2">
           <NavButton tab={TabView.HOME} icon={HomeIcon} label="首页" />
           <NavButton tab={TabView.HISTORY} icon={Calendar} label="历史" />
-          <NavButton tab={TabView.LOG} icon={PenTool} label="记一笔" />
+          <NavButton tab={TabView.LOG} icon={Plus} label="记一笔" isMain={true} />
+          <NavButton tab={TabView.AI_CHAT} icon={MessageCircleHeart} label="小助手" />
           <NavButton tab={TabView.PROFILE} icon={User} label="我的" />
         </div>
       </nav>
