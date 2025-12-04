@@ -82,7 +82,10 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
     return list.sort(() => 0.5 - Math.random()).slice(0, 4);
   }, [data.logs]);
 
-  const handleSend = async (text: string = inputText) => {
+  const handleSend = async (
+    text: string = inputText,
+    options?: { includeTodayLog?: boolean }
+  ) => {
     if (!text.trim() || isLoading) return;
 
     const userMsg: ChatMessage = { role: 'user', content: text, timestamp: Date.now() };
@@ -97,13 +100,12 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
     history.push({ role: 'user', content: userMsg.content });
 
     // Detect if user is asking for today's calorie analysis, and auto-attach today's diet data.
-    const lowerText = text.toLowerCase();
     const isCalorieQuestion =
       /热量|卡路里|大卡|卡\b/.test(text) &&
       /(今天|今日|这天|当天)/.test(text);
 
     let extraContext: string | undefined;
-    if (isCalorieQuestion) {
+    if (options?.includeTodayLog || isCalorieQuestion) {
       const todayStr = new Date().toISOString().split('T')[0];
       const todayLog = data.logs[todayStr];
       if (todayLog) {
@@ -217,7 +219,7 @@ export const AIChat: React.FC<AIChatProps> = ({ data }) => {
             {suggestions.map((s, i) => (
               <button
                 key={i}
-                onClick={() => handleSend(s)}
+              onClick={() => handleSend(s, { includeTodayLog: true })}
                 className="whitespace-nowrap px-3 py-1.5 bg-white/90 backdrop-blur border border-rose-100 text-rose-500 rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform flex items-center gap-1 hover:bg-rose-50"
               >
                 <Sparkles size={10} className="text-primary"/> {s}
