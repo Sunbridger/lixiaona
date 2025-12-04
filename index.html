@@ -66,8 +66,6 @@
       }
 
       body {
-        /* 顶部安全区域：避开刘海；底部留给底部导航自己处理，避免“悬空” */
-        padding-top: env(safe-area-inset-top);
         overflow-x: hidden;
         overscroll-behavior-y: none; /* 尽量减少下拉刷新，但保留垂直滚动 */
         -webkit-tap-highlight-color: transparent;

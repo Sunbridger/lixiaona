@@ -199,13 +199,12 @@ const App = () => {
       <main
         className="flex-1 overflow-y-auto no-scrollbar w-full"
         style={{
-          // main 自己只关心底部导航的高度，顶部安全区交给 body 处理
-          paddingBottom: '60px'
+          paddingBottom: isStandalone ? '60px' : `calc(60px + env(safe-area-inset-bottom))`
         }}
       >
         <div
             className="max-w-md mx-auto p-4 min-h-full"
-            style={{ paddingTop: 16 }}
+            style={{ paddingTop: `calc(16px + env(safe-area-inset-top))` }}
         >
            {renderContent()}
            <DeveloperInfo />
@@ -220,9 +219,7 @@ const App = () => {
       <div
         className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
         style={{
-          // 在 standalone (添加到主屏幕后) 模式，让导航直接覆盖 Home 指示条区域；
-          // 在浏览器模式则保留安全区 + 额外 6px 的视觉留白。
-          bottom: isStandalone ? 'calc(env(safe-area-inset-bottom) * -1)' : 0,
+          bottom: 0,
           paddingBottom: isStandalone ? 0 : 'calc(env(safe-area-inset-bottom) + 6px)'
         }}
       >
