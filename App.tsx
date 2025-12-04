@@ -17,6 +17,7 @@ const App = () => {
   const [currentTab, setCurrentTab] = useState<TabView>(TabView.HOME);
   const [data, setData] = useState<AppData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Initial load with splash screen
   useEffect(() => {
@@ -113,6 +114,20 @@ const App = () => {
     setData(getAppData());
   };
 
+  useEffect(() => {
+    const checkStandalone = () => {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+      setIsStandalone(Boolean(standalone));
+    };
+
+    checkStandalone();
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const listener = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
+    mediaQuery.addEventListener('change', listener);
+
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, []);
+
   // Show splash screen during initial load
   if (isLoading || !data) {
     return <SplashScreen isLoading={true} />;
@@ -206,7 +221,7 @@ const App = () => {
         className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-rose-100"
         style={{
           bottom: 0,
-          paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
+          paddingBottom: isStandalone ? 0 : 'calc(env(safe-area-inset-bottom) + 6px)'
         }}
       >
         <nav className="max-w-md mx-auto h-[60px] flex items-center justify-between px-4">
